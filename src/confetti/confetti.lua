@@ -1,4 +1,4 @@
----- *Confetti* Custom Particle Library by manuel_2867 ----
+---- Confetti - A Custom Particle Library by manuel_2867 ----
 
 ---@class Confetti
 local Confetti = {}
