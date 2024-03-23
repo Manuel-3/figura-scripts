@@ -1,4 +1,4 @@
-#Hotbar Sync
+# Hotbar Sync
 
 This script sends item names and the selected slot id using pings.
 You can just drop this script into your avatar folder, and it will create two global variables that you can use:
