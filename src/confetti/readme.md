@@ -20,6 +20,7 @@ Options is a table with the following supported fields:
 ```elm
 lifetime number "Lifetime in ticks"
 acceleration Vector3|number "Vector in world space or a number which accelerates forwards (positive) or backwards (negative) in the current movement direction"
+friction number|nil "Number of friction to slow down the particle. Value of 1 is no friction, value <1 slows it down, value >1 speeds it up."
 scale Vector3|number "Initial scale when spawning"
 scaleOverTime Vector3|number "Change of scale every tick"
 rotation Vector3|number "Initial rotation when spawning"
