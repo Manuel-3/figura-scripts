@@ -133,7 +133,7 @@ function SwingingPhysics.swingOnHead(part, dir, limits, root, depth)
         if not self.enabled then
             rot = vec(0,0,0)
             _rot = rot
-            part:setRot(rot)
+            part:setOffsetRot(rot)
         end
     end
     function events.tick()
@@ -143,7 +143,7 @@ function SwingingPhysics.swingOnHead(part, dir, limits, root, depth)
 
         local grav
         if root ~= nil then
-            grav = ((downHead - root:getRot()) - rot) * gravity
+            grav = ((downHead - root:getOffsetRot()) - rot) * gravity
         else
             grav = (downHead - rot) * gravity
         end
@@ -169,7 +169,7 @@ function SwingingPhysics.swingOnHead(part, dir, limits, root, depth)
     function events.render(delta)
         if not handler.enabled then return end
 
-        part:setRot(lerp(_rot, rot, delta))
+        part:setOffsetRot(lerp(_rot, rot, delta))
     end
     return handler
 end
@@ -197,7 +197,7 @@ function SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
         if not self.enabled then
             rot = vec(0,0,0)
             _rot = rot
-            part:setRot(rot)
+            part:setOffsetRot(rot)
         end
     end
     function events.tick()
@@ -207,7 +207,7 @@ function SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
 
         local grav
         if root ~= nil then
-            grav = ((downBody - root:getRot()) - rot) * gravity
+            grav = ((downBody - root:getOffsetRot()) - rot) * gravity
         else
             grav = (downBody - rot) * gravity
         end
@@ -234,7 +234,7 @@ function SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
     function events.render(delta)
         if not handler.enabled then return end
 
-        part:setRot(lerp(_rot, rot, delta))
+        part:setOffsetRot(lerp(_rot, rot, delta))
     end
     return handler
 end
