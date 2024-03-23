@@ -27,3 +27,5 @@ rotation Vector3|number "Initial rotation when spawning"
 rotationOverTime Vector3|number "Change of rotation every tick"
 billboard boolean "Whether the Sprite should always face the camera, only affects Sprite particles"
 ```
+
+![Confetti Logo](./images/image.png)

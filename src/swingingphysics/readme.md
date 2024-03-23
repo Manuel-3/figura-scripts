@@ -11,3 +11,5 @@ SwingingPhysics.swingOnHead(part, dir, limits, root, depth)
 SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
 ```
 Check the example avatar to learn how to use it.
+
+![Swinging Physics Logo](./images/image.png)
