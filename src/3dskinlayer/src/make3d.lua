@@ -71,7 +71,7 @@ local function Make3d(at, dims, north, east, south, west, up, down)
     local p = at:getTruePivot()
     local texture = use_vanilla_skin and {getPixel=function(_,x,y)return {a=1} end} or at:getTextures()[1]
     local function needsN(x, y, u, v, w, h)
-        if use_vanilla_skin then return {true, true, true, true, true, true} end
+        if use_vanilla_skin then return {true, false, true, true, true, true} end
         return {
             true, --north
             false, --south
@@ -82,7 +82,7 @@ local function Make3d(at, dims, north, east, south, west, up, down)
         }
     end
     local function needsS(x, y, u, v, w, h)
-        if use_vanilla_skin then return {true, true, true, true, true, true} end
+        if use_vanilla_skin then return {false, true, true, true, true, true} end
         return {
             false, --north
             true, --south
@@ -93,7 +93,7 @@ local function Make3d(at, dims, north, east, south, west, up, down)
         }
     end
     local function needsE(x, y, u, v, w, h)
-        if use_vanilla_skin then return {true, true, true, true, true, true} end
+        if use_vanilla_skin then return {true, true, true, false, true, true} end
         return {
             x==u+w-1 or texture:getPixel(x+1,y).a==0, --north
             x==u or texture:getPixel(x-1,y).a==0, --south
@@ -104,7 +104,7 @@ local function Make3d(at, dims, north, east, south, west, up, down)
         }
     end
     local function needsW(x, y, u, v, w, h)
-        if use_vanilla_skin then return {true, true, true, true, true, true} end
+        if use_vanilla_skin then return {true, true, false, true, true, true} end
         return {
             x==u or texture:getPixel(x-1,y).a==0, --north
             x==u+w-1 or texture:getPixel(x+1,y).a==0, --south
@@ -115,7 +115,7 @@ local function Make3d(at, dims, north, east, south, west, up, down)
         }
     end
     local function needsU(x, y, u, v, w, h)
-        if use_vanilla_skin then return {true, true, true, true, true, true} end
+        if use_vanilla_skin then return {true, true, true, true, true, false} end
         return {
             y==v+h-1 or texture:getPixel(x,y+1).a==0, --north
             y==v or texture:getPixel(x,y-1).a==0, --south
@@ -126,7 +126,7 @@ local function Make3d(at, dims, north, east, south, west, up, down)
         }
     end
     local function needsD(x, y, u, v, w, h)
-        if use_vanilla_skin then return {true, true, true, true, true, true} end
+        if use_vanilla_skin then return {true, true, true, true, false, true} end
         return {
             y==v+h-1 or texture:getPixel(x,y+1).a==0, --north
             y==v or texture:getPixel(x,y-1).a==0, --south
