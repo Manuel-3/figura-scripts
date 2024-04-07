@@ -35,6 +35,20 @@ local leg_scale = 1
 local use_vanilla_skin = false -- set to true if you want to use your vanilla skin. doesnt work with low complexity mode so it is recommended to replace the included texture with your skin instead
 local skin_resolution = 16 -- 16 for normal, 32 for a double resolution skin, etc... up to 256x (will increase complexity significantly)
 local low_complexity_mode = true -- set to false if you need to be able to animate or change textures on the fly (will increase complexity significantly)
+
+-- keep registeredTextures empty to only use the primary texture,
+-- or fill with texture names if you want to pre-load 3d layers for different textures that you want to swap to later.
+-- this is only useful if you have low_complexity_mode = true, otherwise it will not help save model complexity
+-- example:
+-- local registeredTextures = {
+--     "mytexture1",
+--     "mytexture2"
+-- }
+-- then you can simply use setPrimaryTexture("CUSTOM", textures["mytexture1"]) or back to default setPrimaryTexture("PRIMARY")
+-- just like normal. note that the PRIMARY that it has in blockbench by default does NOT have to be listed here.
+local registeredTextures = {
+
+}
 ------------------
 
 ---- CODE STARTS HERE DONT CHANGE ANYTHING BELOW THIS LINE ----
@@ -82,7 +96,13 @@ function newPixel(at,north,south,east,west,up,down)
     return pixel
 end
 
+local err = models:newPart("error")
+err:newText("error"):setBackgroundColor(1,0,0):setScale(0.2):setPos(0,40,0):setAlignment("CENTER"):setText("Error: I need more init instructions! (And probably max complexity too!)\nPlease increase them in the permissions,\nto at least "..(120000*(#registeredTextures+1)).." instructions and 15000 max complexity.")
+
 ---@param at ModelPart
+---@param texture string
+---@param scale number
+---@param inflate number
 ---@param dims Vector3
 ---@param north Vector4
 ---@param east Vector4
@@ -90,9 +110,14 @@ end
 ---@param west Vector4
 ---@param up Vector4
 ---@param down Vector4
-local function Make3d(at, scale, inflate, dims, north, east, south, west, up, down)
+local function Make3d(at, texture, scale, inflate, dims, north, east, south, west, up, down)
     local p = at:getTruePivot()
-    local texture = use_vanilla_skin and {getPixel=function(_,x,y)return {a=1} end} or at:getTextures()[1]
+    if texture == "PRIMARY" then
+        texture = at:getTextures()[1]
+    else
+        texture = use_vanilla_skin and {getPixel=function(_,x,y)return {a=1} end} or textures[texture]
+    end
+    at = at:newPart("container")
     at:setScale(scale*(1+inflate*res/dims.x)/res, scale*(1+inflate*res/dims.y)/res, scale*(1+inflate*res/dims.z)/res)
     local function needsN(x, y, u, v, w, h)
         if use_vanilla_skin then return {true, false, true, true, true, true} end
@@ -220,26 +245,64 @@ local function Make3d(at, scale, inflate, dims, north, east, south, west, up, do
             end
         end
     end
+
+    return at
 end
 
 function events.ENTITY_INIT()
+    for _, texture in ipairs(registeredTextures) do
+        registerTexture(texture)
+    end
+    
+    registerTexture("PRIMARY") -- default
+    
+    if use_vanilla_skin then
+        models.player_model3d:setPrimaryTexture("SKIN")
+    end
+end
+
+local layers = {}
+
+---@param texture string
+function registerTexture(texture)
+    local parts = {}
     if player:getModelType() == "SLIM" then
         models.player_model3d.LeftArm:setVisible(false)
         models.player_model3d.RightArm:setVisible(false)
-        Make3d(models.player_model3d.LeftArmSlim.center8, arm_scale, arm_inflate, vec(3,12,4)*res, vec(52,52,3,12)*res, vec(48,52,4,12)*res, vec(59,52,3,12)*res, vec(55,52,4,12)*res, vec(55,52,-3,-4)*res, vec(58,48,-3,4)*res)
-        Make3d(models.player_model3d.RightArmSlim.center7, arm_scale, arm_inflate, vec(3,12,4)*res, vec(44,36,3,12)*res, vec(40,36,4,12)*res, vec(51,36,3,12)*res, vec(47,36,4,12)*res, vec(47,36,-3,-4)*res, vec(50,32,-3,4)*res)
+        table.insert(parts, Make3d(models.player_model3d.LeftArmSlim.center8, texture, arm_scale, arm_inflate, vec(3,12,4)*res, vec(52,52,3,12)*res, vec(48,52,4,12)*res, vec(59,52,3,12)*res, vec(55,52,4,12)*res, vec(55,52,-3,-4)*res, vec(58,48,-3,4)*res))
+        table.insert(parts, Make3d(models.player_model3d.RightArmSlim.center7, texture, arm_scale, arm_inflate, vec(3,12,4)*res, vec(44,36,3,12)*res, vec(40,36,4,12)*res, vec(51,36,3,12)*res, vec(47,36,4,12)*res, vec(47,36,-3,-4)*res, vec(50,32,-3,4)*res))
     else
         models.player_model3d.LeftArmSlim:setVisible(false)
         models.player_model3d.RightArmSlim:setVisible(false)
-        Make3d(models.player_model3d.LeftArm.center5, arm_scale, arm_inflate, vec(4,12,4)*res, vec(52,52,4,12)*res, vec(48,52,4,12)*res, vec(60,52,4,12)*res, vec(56,52,4,12)*res, vec(56,52,-4,-4)*res, vec(60,48,-4,4)*res)
-        Make3d(models.player_model3d.RightArm.center4, arm_scale, arm_inflate, vec(4,12,4)*res, vec(44,36,4,12)*res, vec(40,36,4,12)*res, vec(52,36,4,12)*res, vec(48,36,4,12)*res, vec(48,36,-4,-4)*res, vec(52,32,-4,4)*res)
+        table.insert(parts, Make3d(models.player_model3d.LeftArm.center5, texture, arm_scale, arm_inflate, vec(4,12,4)*res, vec(52,52,4,12)*res, vec(48,52,4,12)*res, vec(60,52,4,12)*res, vec(56,52,4,12)*res, vec(56,52,-4,-4)*res, vec(60,48,-4,4)*res))
+        table.insert(parts, Make3d(models.player_model3d.RightArm.center4, texture, arm_scale, arm_inflate, vec(4,12,4)*res, vec(44,36,4,12)*res, vec(40,36,4,12)*res, vec(52,36,4,12)*res, vec(48,36,4,12)*res, vec(48,36,-4,-4)*res, vec(52,32,-4,4)*res))
     end
-    Make3d(models.player_model3d.Head.center2, head_scale, head_inflate, vec(8,8,8)*res, vec(40, 8, 8, 8)*res, vec(32, 8, 8, 8)*res, vec(56, 8, 8, 8)*res, vec(48, 8, 8, 8)*res, vec(48, 8, -8, -8)*res, vec(56, 0, -8, 8)*res)
-    Make3d(models.player_model3d.Body.center3, body_scale, body_inflate, vec(8,12,4)*res, vec(20,36,8,12)*res, vec(16,36,4,12)*res, vec(32,36,8,12)*res, vec(28,36,4,12)*res, vec(28,36,-8,-4)*res, vec(36,32,-8,4)*res)
-    Make3d(models.player_model3d.LeftLeg.center, leg_scale, leg_inflate, vec(4,12,4)*res, vec(4,52,4,12)*res, vec(0,52,4,12)*res, vec(12,52,4,12)*res, vec(8,52,4,12)*res, vec(8,52,-4,-4)*res, vec(12,48,-4,4)*res)
-    Make3d(models.player_model3d.RightLeg.center6, leg_scale, leg_inflate, vec(4,12,4)*res, vec(4,36,4,12)*res, vec(0,36,4,12)*res, vec(12,36,4,12)*res, vec(8,36,4,12)*res, vec(8,36,-4,-4)*res, vec(12,32,-4,4)*res)    
+    table.insert(parts, Make3d(models.player_model3d.Head.center2, texture, head_scale, head_inflate, vec(8,8,8)*res, vec(40, 8, 8, 8)*res, vec(32, 8, 8, 8)*res, vec(56, 8, 8, 8)*res, vec(48, 8, 8, 8)*res, vec(48, 8, -8, -8)*res, vec(56, 0, -8, 8)*res))
+    table.insert(parts, Make3d(models.player_model3d.Body.center3, texture, body_scale, body_inflate, vec(8,12,4)*res, vec(20,36,8,12)*res, vec(16,36,4,12)*res, vec(32,36,8,12)*res, vec(28,36,4,12)*res, vec(28,36,-8,-4)*res, vec(36,32,-8,4)*res))
+    table.insert(parts, Make3d(models.player_model3d.LeftLeg.center, texture, leg_scale, leg_inflate, vec(4,12,4)*res, vec(4,52,4,12)*res, vec(0,52,4,12)*res, vec(12,52,4,12)*res, vec(8,52,4,12)*res, vec(8,52,-4,-4)*res, vec(12,48,-4,4)*res))
+    table.insert(parts, Make3d(models.player_model3d.RightLeg.center6, texture, leg_scale, leg_inflate, vec(4,12,4)*res, vec(4,36,4,12)*res, vec(0,36,4,12)*res, vec(12,36,4,12)*res, vec(8,36,4,12)*res, vec(8,36,-4,-4)*res, vec(12,32,-4,4)*res))
+    layers[texture] = parts
+    err:remove()
+end
 
-    if use_vanilla_skin then
-        models.player_model3d:setPrimaryTexture("SKIN")
+function getPrimaryTextureUpwards(part)
+    local foundtype, foundtex = "PRIMARY", nil
+    while part do
+        local type, tex = part:getPrimaryTexture()
+        if type ~= "PRIMARY" then
+            foundtype, foundtex = type, tex
+            return foundtype, foundtex
+        end
+        part = part:getParent()
+    end
+    return foundtype, foundtex
+end
+
+function events.tick()
+    for texture, parts in pairs(layers) do
+        for _, part in ipairs(parts) do
+            local type, tex = getPrimaryTextureUpwards(part)
+            part:setVisible(type == texture or (type == "CUSTOM" and textures[figuraMetatables.Texture.__index(tex, 'name')]:getName() == texture))
+        end
     end
 end
