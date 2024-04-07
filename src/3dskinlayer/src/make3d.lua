@@ -93,7 +93,7 @@ end
 local function Make3d(at, scale, inflate, dims, north, east, south, west, up, down)
     local p = at:getTruePivot()
     local texture = use_vanilla_skin and {getPixel=function(_,x,y)return {a=1} end} or at:getTextures()[1]
-    at:setScale(scale*(1+inflate/dims.x)/res, scale*(1+inflate/dims.y)/res, scale*(1+inflate/dims.z)/res)
+    at:setScale(scale*(1+inflate*res/dims.x)/res, scale*(1+inflate*res/dims.y)/res, scale*(1+inflate*res/dims.z)/res)
     local function needsN(x, y, u, v, w, h)
         if use_vanilla_skin then return {true, false, true, true, true, true} end
         return {
