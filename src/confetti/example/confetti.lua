@@ -1,4 +1,4 @@
----- *Confetti* Custom Particle Library by manuel_2867 ----
+---- Confetti - A Custom Particle Library by manuel_2867 ----
 
 ---@class Confetti
 local Confetti = {}
@@ -31,6 +31,7 @@ local ConfettoOptions = {}
 ---@param lifetime number|nil Lifetime in ticks
 ---@return nil
 function Confetti.registerMesh(name, mesh, lifetime)
+    if mesh and mesh:getType() ~= "GROUP" then logJson('[{color="yellow",text="[WARNING] "},{color:"white",text:"You are creating a particle by targeting a model part directly, instead of a group. This can cause unexpected behavior. It is recommended to use a group that is positioned at (0,0,0) instead. If you know what you are doing, to get rid of this warning simply delete this line of code."}]') end
     Particles[name] = {mesh=mesh,lifetime=lifetime or 20}
     mesh:setVisible(false)
 end
