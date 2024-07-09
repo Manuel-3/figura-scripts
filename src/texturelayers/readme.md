@@ -9,9 +9,10 @@ To use simply name your textures accordingly:
 
 If you get an error, make sure to put the correct lua texture name, remember that you can print all the texture names in chat with with `logTable(textures:getTextures())` at the top of your script file.
 
-Optional: After adding **your own empty script file**, you can now setVisible individual layers, for example:
+Optional: After adding **your own empty script file**, you can now setVisible or setColor individual layers, for example:
 ```lua
 local TextureLayers = require("texturelayers")
+TextureLayers:setColor("myTexNameLayer1", vec(1,0.8,0.5))
 TextureLayers:setVisible("myTexNameLayer2", false)
 TextureLayers:update("myTexName")
 ```

@@ -24,7 +24,8 @@ for _,texture in ipairs(textures:getTextures()) do
         if not layerTextures[baseName] then
             local baseTexture = textures[baseName]
             if not baseTexture then
-                logJson(toJson({{color="white",text="["},{color="yellow",text="Warning"},{color="white",text="]"},{color="gray",text="Base texture "..baseName.." not found for layer texture "..texture:getName().."."}}))
+                logJson(toJson({{color="white",text="["},{color="yellow",text="Warning"},{color="white",text="] "},{color="gray",text="Base texture "..baseName.." not found for layer texture "..texture:getName().."!\nHere is your texture list, make sure to spell everyhing correctly:\n"}}))
+                logTable(textures:getTextures())
             else
                 layerTextures[baseName] = {
                     layers={}
@@ -36,6 +37,7 @@ for _,texture in ipairs(textures:getTextures()) do
         end
         layerTextures[baseName].layers[layerNum].texture = texture
         layerTextures[baseName].layers[layerNum].visible = true
+        layerTextures[baseName].layers[layerNum].color = vec(1,1,1,1)
     end
 end
 
@@ -46,6 +48,16 @@ function TextureLayers:setVisible(name, visibility)
     local baseName, layerNum = string.match(name, "(.+)[Ll]ayer(%d+)")
     if baseName and layerNum then
         layerTextures[baseName].layers[layerNum].visible = visibility
+    end
+end
+
+--- Set color overlay of a layer. Uses multiplicative blending, same as the ModelPart:setColor() function.
+---@param name string Full texture name
+---@param color Vector3|Vector4
+function TextureLayers:setColor(name, color)
+    local baseName, layerNum = string.match(name, "(.+)[Ll]ayer(%d+)")
+    if baseName and layerNum then
+        layerTextures[baseName].layers[layerNum].color = vec(color.r, color.g, color.b, color.a or 1)
     end
 end
 
@@ -67,8 +79,9 @@ function TextureLayers:update(name)
     for _, key in ipairs(keys) do
         if layerTextures[baseName].layers[key].visible then
             local layer = layerTextures[baseName].layers[key].texture
+            local colMul = layerTextures[baseName].layers[key].color
             baseTexture:applyFunc(0,0,dims.x,dims.y,function(col,x,y)
-                return blend(layer:getPixel(x,y),col)
+                return blend(layer:getPixel(x,y)*colMul,col)
             end)
         end
     end
