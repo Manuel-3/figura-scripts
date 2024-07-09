@@ -18,27 +18,60 @@ end
 
 local layerTextures = {}
 
-for _,texture in ipairs(textures:getTextures()) do
-    local baseName, layerNum = string.match(texture:getName(), "(.+)[Ll]ayer(%d+)")
-    if baseName and layerNum then
-        if not layerTextures[baseName] then
-            local baseTexture = textures[baseName]
-            if not baseTexture then
-                logJson(toJson({{color="white",text="["},{color="yellow",text="Warning"},{color="white",text="] "},{color="gray",text="Base texture "..baseName.." not found for layer texture "..texture:getName().."!\nHere is your texture list, make sure to spell everyhing correctly:\n"}}))
-                logTable(textures:getTextures())
-            else
-                layerTextures[baseName] = {
-                    layers={}
-                }
+local function refreshTextures()
+    for _,texture in ipairs(textures:getTextures()) do
+        local baseName, layerNum = string.match(texture:getName(), "(.+)[Ll]ayer(%d+)")
+        if baseName and layerNum then
+            if not layerTextures[baseName] then
+                local baseTexture = textures[baseName]
+                if not baseTexture then
+                    logJson(toJson({{color="white",text="["},{color="yellow",text="Warning"},{color="white",text="] "},{color="gray",text="Base texture "..baseName.." not found for layer texture "..texture:getName().."!\nHere is your texture list, make sure to spell everyhing correctly:\n"}}))
+                    logTable(textures:getTextures())
+                else
+                    layerTextures[baseName] = {
+                        layers={}
+                    }
+                end
             end
+            if not layerTextures[baseName].layers[layerNum] then
+                layerTextures[baseName].layers[layerNum] = {}
+            end
+            layerTextures[baseName].layers[layerNum].texture = texture
+            layerTextures[baseName].layers[layerNum].visible = true
+            layerTextures[baseName].layers[layerNum].color = vec(1,1,1,1)
         end
-        if not layerTextures[baseName].layers[layerNum] then
-            layerTextures[baseName].layers[layerNum] = {}
-        end
-        layerTextures[baseName].layers[layerNum].texture = texture
-        layerTextures[baseName].layers[layerNum].visible = true
-        layerTextures[baseName].layers[layerNum].color = vec(1,1,1,1)
     end
+end
+
+refreshTextures()
+
+local additionalTextures = {} -- fix for a figura bug
+
+local textureAPI__index = figuraMetatables.TextureAPI.__index
+function figuraMetatables.TextureAPI.__index(self, index)
+    if index == "copy" or index == "read" or index == "newTexture" or index == "fromVanilla" then
+        return function(...)
+            local ret = textureAPI__index(self, index)(...)
+            table.insert(additionalTextures,ret)
+            refreshTextures()
+            return ret
+        end
+    elseif index == "getTextures" then -- fix for a figura bug
+        return function(...)
+            local ret = textureAPI__index(self, index)(...)
+            for _,a in pairs(additionalTextures) do
+                local add = true
+                for _,t in ipairs(ret) do
+                    add = add or a==t
+                end
+                if add then
+                    table.insert(ret,a)
+                end
+            end
+            return ret
+        end
+    end
+    return textureAPI__index(self, index)
 end
 
 --- Set visibility of a layer. Must use update() afterwards to apply changes.
