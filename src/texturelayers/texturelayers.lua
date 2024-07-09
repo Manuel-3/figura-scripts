@@ -59,7 +59,7 @@ function figuraMetatables.TextureAPI.__index(self, index)
     elseif index == "getTextures" then -- fix for a figura bug
         return function(...)
             local ret = textureAPI__index(self, index)(...)
-            for _,a in pairs(additionalTextures) do
+            for _,a in ipairs(additionalTextures) do
                 local add = true
                 for _,t in ipairs(ret) do
                     add = add or a==t
