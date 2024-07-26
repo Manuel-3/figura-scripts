@@ -1,13 +1,16 @@
 -- Config Editor by manuel_2867
 local ConfigEditor = {}
 
-local indent = 2
+local indent = "   "
 local light_blue = "#5da3fb"
 
 local playername = ""
 local selfname = ""
 local editing = nil
+local renaming = nil
 local loading = false
+local newentry = false
+local newtbl = false
 
 function events.entity_init()
     playername = player:getName()
@@ -15,6 +18,140 @@ end
 
 function configeditorglobal_openconfigeditor()
     ConfigEditor:open()
+end
+
+function configeditorglobal_newentry()
+    newentry = true
+    local out = toJson({
+        {
+            text="Type the ",
+            color="yellow"
+        },
+        {
+            text="name",
+            color="white"
+        },
+        {
+            text=" of your new entry in chat and send it. Click ",
+            color="yellow"
+        },
+        {
+            text="cancel",
+            color="white",
+            clickEvent={
+                action="figura_function",
+                value="configeditorglobal_cancel()"
+            },
+            hoverEvent={
+                action="show_text",
+                contents="Cancel"
+            }
+        },
+        {
+            text=" to cancel. Click ",
+            color="yellow"
+        },
+        {
+            text="table",
+            color=light_blue,
+            clickEvent={
+                action="figura_function",
+                value="configeditorglobal_dble()"
+            },
+            hoverEvent={
+                action="show_text",
+                contents="New table instead of value"
+            }
+        },
+        {
+            text=" to add a table instead.",
+            color="yellow"
+        }
+    })
+    host:setActionbar(out)
+    logJson(out)
+end
+
+function configeditorglobal_newtable()
+    newtbl = true
+    logJson(toJson({
+        {
+            text="Type the ",
+            color="yellow"
+        },
+        {
+            text="table name",
+            color=light_blue
+        },
+        {
+            text=" in chat.",
+            color="yellow"
+        }
+    }))
+end
+
+function configeditorglobal_setadd(pathjson)
+    editing = parseJson(pathjson)
+    local pathjoined = ""
+    for i=1,#editing do
+        pathjoined = pathjoined .. " > " .. editing[i]
+    end
+    local out = toJson({
+        {
+            text="Adding to ",
+            color="yellow"
+        },
+        {
+            text=string.sub(pathjoined,4),
+            color="white"
+        },
+        {
+            text=", type a ",
+            color="yellow"
+        },
+        {
+            text="name",
+            color="white"
+        },
+        {
+            text=" in chat and send it. Click ",
+            color="yellow"
+        },
+        {
+            text="cancel",
+            color="white",
+            clickEvent={
+                action="figura_function",
+                value="configeditorglobal_cancel()"
+            },
+            hoverEvent={
+                action="show_text",
+                contents="Cancel"
+            }
+        },
+        {
+            text=" to cancel. Click ",
+            color="yellow"
+        },
+        {
+            text="table",
+            color=light_blue,
+            clickEvent={
+                action="figura_function",
+                value="configeditorglobal_newtable()"
+            },
+            hoverEvent={
+                action="show_text",
+                contents="New table instead of value"
+            }
+        },
+        {
+            text=" to add a table instead.",
+            color="yellow"
+        }
+    })
+    host:setActionbar(out)
+    logJson(out)
 end
 
 function configeditorglobal_setedit(pathjson)
@@ -33,12 +170,60 @@ function configeditorglobal_setedit(pathjson)
             color="white"
         },
         {
-            text=", type a value in chat and send it. Type ",
+            text=", type a value in chat and send it. Click ",
             color="yellow"
         },
         {
             text="cancel",
+            color="white",
+            clickEvent={
+                action="figura_function",
+                value="configeditorglobal_cancel()"
+            },
+            hoverEvent={
+                action="show_text",
+                contents="Cancel"
+            }
+        },
+        {
+            text=" to cancel.",
+            color="yellow"
+        }
+    })
+    host:setActionbar(out)
+    logJson(out)
+end
+
+function configeditorglobal_setrename(pathjson)
+    renaming = parseJson(pathjson)
+    local pathjoined = ""
+    for i=1,#renaming do
+        pathjoined = pathjoined .. " > " .. renaming[i]
+    end
+    local out = toJson({
+        {
+            text="Renaming ",
+            color="yellow"
+        },
+        {
+            text=string.sub(pathjoined,4),
             color="white"
+        },
+        {
+            text=", type a value in chat and send it. Click ",
+            color="yellow"
+        },
+        {
+            text="cancel",
+            color="white",
+            clickEvent={
+                action="figura_function",
+                value="configeditorglobal_cancel()"
+            },
+            hoverEvent={
+                action="show_text",
+                contents="Cancel"
+            }
         },
         {
             text=" to cancel.",
@@ -53,12 +238,76 @@ function configeditorglobal_loadconfig()
     loading = true
     local out = toJson({
         {
-            text=("Which config do you want to load? Type a value in chat and send it. Type cancel to cancel."),
+            text=("Which config do you want to load? Type a value in chat and send it. Click "),
             color="yellow"
+        },
+        {
+            text="cancel",
+            color="white",
+            clickEvent={
+                action="figura_function",
+                value="configeditorglobal_cancel()"
+            },
+            hoverEvent={
+                action="show_text",
+                contents="Cancel"
+            }
+        },
+        {
+            text=(" to cancel."),
+            color="yellow"
+        },
+    })
+    host:setActionbar(out)
+    logJson(out)
+end
+
+function configeditorglobal_cancel()
+    editing = nil
+    loading = false
+    newentry = false
+    newtbl = false
+    local out = toJson({
+        {
+            text="Canceled editing.",
+            color="red"
         }
     })
     host:setActionbar(out)
     logJson(out)
+    return nil
+end
+
+local function logError(err)
+    logJson(toJson({
+        {
+            text="[error] ",
+            color="red"
+        },
+        {
+            text=playername,
+            color="white"
+        },
+        {
+            text=" : "..err,
+            color="red"
+        }
+    }))
+end
+
+local function typeParse(input)
+    local num = tonumber(input)
+    if num then
+        return num
+    end
+    if input == "true" then
+        return true
+    elseif input == "false" then
+        return false
+    elseif input == "nil" then
+        return nil
+    end
+    return input
 end
 
 local function flush(n)
@@ -76,13 +325,10 @@ local function color(v)
     return "white"
 end
 
-local function draw(tbl,lvl,path)
+local function draw(tbl,ind,path)
     path = path or {}
-    lvl = lvl or 0
-    local ind = ""
-    for _=0,lvl+indent-1 do
-        ind = ind.." "
-    end
+    ind = ind or ""
+    ind = ind .. indent
     local keys = {}
     for key in pairs(tbl) do
         table.insert(keys, key)
@@ -95,88 +341,152 @@ local function draw(tbl,lvl,path)
         if (type(v)~="table") then
             logJson(toJson({
                 {
-                    text=ind.."[",
-                    color="dark_gray",
+                    text="",
+                    extra={
+                        {
+                            text=ind.."[",
+                            color="dark_gray"
+                        },
+                        {
+                            text=k,
+                            color="gray"
+                        },
+                        {
+                            text="]",
+                            color="dark_gray"
+                        }
+                    },
+                    clickEvent={
+                        action="figura_function",
+                        value="configeditorglobal_setrename([====["..toJson(newpath).."]====])"
+                    },
+                    hoverEvent={
+                        action="show_text",
+                        contents={
+                            {
+                                text="Click to ",
+                                color="white"
+                            },
+                            {
+                                text="rename ",
+                                color="yellow"
+                            },
+                            {
+                                text=k,
+                                color="white"
+                            }
+                        }
+                    }
+                },
+                {
+                    text="",
+                    extra={
+                        {
+                            text=" > ",
+                            color="black"
+                        },
+                        {
+                            text=v,
+                            color=color(v)
+                        },
+                        {
+                            text="\n"
+                        }
+                    },
                     clickEvent={
                         action="figura_function",
                         value="configeditorglobal_setedit([====["..toJson(newpath).."]====])"
                     },
                     hoverEvent={
                         action="show_text",
-                        contents="Click to edit "..k
+                        contents={
+                            {
+                                text="Click to ",
+                                color="white"
+                            },
+                            {
+                                text="edit ",
+                                color="green"
+                            },
+                            {
+                                text=k,
+                                color="white"
+                            }
+                        }
                     }
-                },
-                {
-                    text=k,
-                    color="gray",
-                    clickEvent={
-                        action="figura_function",
-                        value="configeditorglobal_setedit([====["..toJson(newpath).."]====])"
-                    },
-                    hoverEvent={
-                        action="show_text",
-                        contents="Click to edit "..k
-                    }
-                },
-                {
-                    text="]",
-                    color="dark_gray",
-                    clickEvent={
-                        action="figura_function",
-                        value="configeditorglobal_setedit([====["..toJson(newpath).."]====])"
-                    },
-                    hoverEvent={
-                        action="show_text",
-                        contents="Click to edit "..k
-                    }
-                },
-                {
-                    text=" > ",
-                    color="black",
-                    clickEvent={
-                        action="figura_function",
-                        value="configeditorglobal_setedit([====["..toJson(newpath).."]====])"
-                    },
-                    hoverEvent={
-                        action="show_text",
-                        contents="Click to edit "..k
-                    }
-                },
-                {
-                    text=v,
-                    color=color(v),
-                    clickEvent={
-                        action="figura_function",
-                        value="configeditorglobal_setedit([====["..toJson(newpath).."]====])"
-                    },
-                    hoverEvent={
-                        action="show_text",
-                        contents="Click to edit "..k
-                    }
-                },
-                {
-                    text="\n"
                 }
             }))
         else
             logJson(toJson({
-                {
-                    text=ind.."[",
-                    color="dark_gray"
+                text="",
+                extra={
+                    {
+                        text=ind.."[",
+                        color="dark_gray"
+                    },
+                    {
+                        text=k,
+                        color=light_blue
+                    },
+                    {
+                        text="]",
+                        color="dark_gray"
+                    },
+                    {
+                        text="\n"
+                    }
                 },
-                {
-                    text=k,
-                    color=light_blue
+                clickEvent={
+                    action="figura_function",
+                    value="configeditorglobal_setrename([====["..toJson(newpath).."]====])"
                 },
-                {
-                    text="]",
-                    color="dark_gray"
-                },
-                {
-                    text="\n"
+                hoverEvent={
+                    action="show_text",
+                    contents={
+                        {
+                            text="Click to ",
+                            color="white"
+                        },
+                        {
+                            text="rename ",
+                            color="yellow"
+                        },
+                        {
+                            text=k,
+                            color="white"
+                        }
+                    }
                 }
             }))
-            draw(v,lvl+indent,newpath)
+            draw(v,ind,newpath)
+            logJson(toJson({
+                text="",
+                extra={
+                    {
+                        text=ind..indent.."[",
+                        color="dark_gray"
+                    },
+                    {
+                        text="+",
+                        color="yellow"
+                    },
+                    {
+                        text="]",
+                        color="dark_gray"
+                    },
+                    {
+                        text="\n"
+                    }
+                },
+                clickEvent={
+                    action="figura_function",
+                    value="configeditorglobal_setadd([====["..toJson(newpath).."]====])"
+                },
+                hoverEvent={
+                    action="show_text",
+                    contents="Add entry in "..k
+                }
+            }))
         end
     end
 end
@@ -215,7 +525,7 @@ function ConfigEditor:printInfo()
         },
         {
             text="Config Editor",
-            color="gray"
+            color="white"
         },
         {
             text="]]",
@@ -234,8 +544,8 @@ function ConfigEditor:printInfo()
             color="gray"
         },
         {
-            text="click here",
-            color=light_blue,
+            text="click here.\n",
+            color="yellow",
             clickEvent={
                 action="figura_function",
                 value="configeditorglobal_openconfigeditor()"
@@ -263,7 +573,7 @@ function ConfigEditor:open(name)
             color="dark_gray"
         },
         {
-            text=" Config Editor ",
+            text="Config Editor",
             color="white"
         },
         {
@@ -290,64 +600,115 @@ function ConfigEditor:open(name)
     draw(cfg)
     logJson(toJson({
         {
-            text=">> Use your mouse to click and edit.\n>> Scroll up if you can't see the full config.",
-            color="gray"
+            text="",
+            extra={
+                {
+                    text=indent.."[",
+                    color="dark_gray"
+                },
+                {
+                    text="+",
+                    color="yellow"
+                },
+                {
+                    text="]",
+                    color="dark_gray"
+                },
+                {
+                    text="\n"
+                }
+            },
+            clickEvent={
+                action="figura_function",
+                value="configeditorglobal_newentry()"
+            },
+            hoverEvent={
+                action="show_text",
+                contents="Add entry"
+            }
         }
+    }))
+    logJson(toJson({
+        text=">> Use your mouse to click and edit.\n>> Scroll up if you can't see the full config.",
+        color="gray"
     }))
 end
 
 function events.chat_send_message(message)
     if editing then
-        if string.lower(message) == "cancel" then
-            editing = nil
-            local out = toJson({
-                {
-                    text="Canceled editing.",
-                    color="red"
-                }
-            })
-            host:setActionbar(out)
-            logJson(out)
-            return nil
-        end
+        local revert = config:getName()
         local success, err = pcall(function()
-            local revert = config:getName()
             config:setName(selfname)
             local container = config:load(editing[1])
             local val = container
-            log(val)
             if type(val) == "table" then
-                for i = 2, #editing-1 do
-                    val = val[editing[i]]
+                if #editing > 1 then
+                    for i = 2, #editing-1 do
+                        val = val[editing[i]]
+                    end
+                    if type(val[editing[#editing]]) == "table" then
+                        if message ~= "nil" then
+                            val[editing[#editing]][message] = newtbl and {} or ""
+                        end
+                    else
+                        val[editing[#editing]] = typeParse(message)
+                    end
+                else
+                    if message ~= "nil" then
+                        val[message] = newtbl and {} or ""
+                    end
                 end
-                val[editing[#editing]] = message
             else
-                container = message
+                container = typeParse(message)
             end
             config:save(editing[1], container)
-            config:setName(revert)
-            editing = nil
+            newtbl = false
             ConfigEditor:open(selfname)
         end)
         if not success then
-            logJson(toJson({
-                {
-                    text="[error] ",
-                    color="red"
-                },
-                {
-                    text=playername,
-                    color="white"
-                },
-                {
-                    text=" : "..err,
-                    color="red"
-                }
-            }))
+            logError(err)
         end
+        config:setName(revert)
+        editing = nil
+        return nil
+    elseif renaming then
+        local revert = config:getName()
+        local success, err = pcall(function()
+            if message == "nil" then message = nil end
+            config:setName(selfname)
+            local container = config:load(renaming[1])
+            local val = container
+            if type(val) == "table" and #renaming > 1 then
+                for i = 2, #renaming-1 do
+                    val = val[renaming[i]]
+                end
+                if message then val[message] = val[renaming[#renaming]] end
+                val[renaming[#renaming]] = nil
+                config:save(renaming[1], container)
+            else
+                if message then config:save(message, config:load(renaming[1])) end
+                config:save(renaming[1], nil)
+            end
+            ConfigEditor:open(selfname)
+        end)
+        if not success then
+            logError(err)
+        end
+        config:setName(revert)
+        renaming = nil
         return nil
     elseif loading then
+        loading = false
         ConfigEditor:open(message)
+        return nil
+    elseif newentry then
+        newentry = false
+        local revert = config:getName()
+        config:setName(selfname)
+        config:save(message, newtbl and {} or "")
+        newtbl = false
+        config:setName(revert)
+        ConfigEditor:open()
         return nil
     elseif string.find(message, "^/configeditor") then
         ConfigEditor:open(string.sub(message,15))
