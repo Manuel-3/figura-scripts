@@ -56,7 +56,7 @@ function configeditorglobal_newentry()
             color=light_blue,
             clickEvent={
                 action="figura_function",
-                value="configeditorglobal_dble()"
+                value="configeditorglobal_newtable()"
             },
             hoverEvent={
                 action="show_text",
