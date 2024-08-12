@@ -9,7 +9,12 @@ settings.vanillaModelPoses = true
 settings.hideHeldItems = true
 settings.disableWorldInteractions = true
 settings.disableWalking = false
-settings.flipLeftRightClick = false
+settings.flipLeftRightClick = true
+settings.flipLeftRightOnTopFace = true
+settings.flipLeftRightOnBottomFace = false
+settings.invertCameraHorizontal = false
+settings.invertCameraVertical = false
+settings.cameraSensitivity = 0.3
 -- End Of Settings
 
 ---@class RubiksCube
@@ -455,6 +460,15 @@ if host:isHost() then
         end
     }
     isSolved = function()
+        for piece, value in pairs(rotations) do
+            local idx = lookUpIdx(piece)
+            if idx ~= 2 and idx ~= 4 and idx ~= 6 and idx ~= 8 and idx ~= 17 and idx ~= 26 then
+                local x,y,z = extractEulerAngles(value)
+                if math.round(x) ~= 0 or math.round(y) ~= 0 or math.round(z) ~= 0 then
+                    return false
+                end
+            end
+        end
         for side, contents in pairs(solvedCube) do
             for i = 1, 9 do
                 if cube[side][i] ~= contents[i] then
@@ -812,8 +826,8 @@ if host:isHost() then
         if not rubiksEnabled then return end
         if solveMode then
             -- Convert delta to angles based on sensitivity
-            local yawAngle = x * 0.3
-            local pitchAngle = y * 0.3
+            local yawAngle = x * export.settings.cameraSensitivity * (export.settings.invertCameraHorizontal and -1 or 1)
+            local pitchAngle = y * export.settings.cameraSensitivity * (export.settings.invertCameraVertical and 1 or -1)
     
             -- Apply yaw rotation
             rubiksrotationmatrix = rotateLocalYaw(rubiksrotationmatrix, yawAngle)
@@ -854,7 +868,11 @@ if host:isHost() then
             timing = true
             timer = 0
         end
-        turn(selected,export.settings.flipLeftRightClick)
+        local prime = export.settings.flipLeftRightClick
+        if selected=="yellow" and export.settings.flipLeftRightOnTopFace or selected=="white" and export.settings.flipLeftRightOnBottomFace then
+            prime = not prime
+        end
+        turn(selected,prime)
         solvedState = isSolved()
         if solvedState then
             whenSolved()
@@ -869,7 +887,11 @@ if host:isHost() then
             timing = true
             timer = 0
         end
-        turn(selected,not export.settings.flipLeftRightClick)
+        local prime = export.settings.flipLeftRightClick
+        if selected=="yellow" and export.settings.flipLeftRightOnTopFace or selected=="white" and export.settings.flipLeftRightOnBottomFace then
+            prime = not prime
+        end
+        turn(selected,not prime)
         solvedState = isSolved()
         if solvedState then
             whenSolved()
