@@ -9,6 +9,7 @@ settings.vanillaModelPoses = true
 settings.hideHeldItems = true
 settings.disableWorldInteractions = true
 settings.disableWalking = false
+settings.flipLeftRightClick = false
 -- End Of Settings
 
 ---@class RubiksCube
@@ -853,7 +854,7 @@ if host:isHost() then
             timing = true
             timer = 0
         end
-        turn(selected,false)
+        turn(selected,export.settings.flipLeftRightClick)
         solvedState = isSolved()
         if solvedState then
             whenSolved()
@@ -868,7 +869,7 @@ if host:isHost() then
             timing = true
             timer = 0
         end
-        turn(selected,true)
+        turn(selected,not export.settings.flipLeftRightClick)
         solvedState = isSolved()
         if solvedState then
             whenSolved()
