@@ -618,7 +618,6 @@ local function getVisibleFace(rotationMatrix)
     return visibleFace
 end
 
-
 local function goBack()
     if export.goBackPage then
         action_wheel:setPage(export.goBackPage)
@@ -696,6 +695,7 @@ if host:isHost() then
             timing = false
             timer = 0
             scramble = {}
+            history = {}
             for _ = 1, 25 do
                 table.insert(scramble,{side=faceNormals[math.random(#faceNormals)].name,prime=math.random(2)==1})
             end
