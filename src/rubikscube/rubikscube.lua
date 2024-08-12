@@ -15,6 +15,9 @@ settings.flipLeftRightOnBottomFace = false
 settings.invertCameraHorizontal = false
 settings.invertCameraVertical = false
 settings.cameraSensitivity = 0.3
+settings.previewRightClickTurnDir = true
+settings.smoothPreview = true
+settings.previewAmountDegrees = 5
 -- End Of Settings
 
 ---@class RubiksCube
@@ -222,9 +225,12 @@ end
 local pieces = models.rubikscube.Rubiks:getChildren()
 local rotations = {}
 local currentRotations = {}
+local previousRotations = {}
+local identity = {{1,0,0},{0,1,0},{0,0,1}}
 for _, piece in pairs(pieces) do
-    rotations[piece] = {{1,0,0},{0,1,0},{0,0,1}}
-    currentRotations[piece] = {{1,0,0},{0,1,0},{0,0,1}}
+    rotations[piece] = identity
+    currentRotations[piece] = identity
+    previousRotations[piece] = identity
 end
 
 local cube = {}
@@ -235,7 +241,7 @@ local logMoves = config:load("logMoves")
 local rubiksEnabled = config:load("rubiksEnabled")
 local distance = config:load("distance")
 local timerEnabled = config:load("timerEnabled")
-local solvedCube, switch, rearrange, isSolved, lookUpIdx, copyCube, toBinaryString, encode, formatTime, turn, rotateLocalYaw, rotatePitch
+local solvedCube, switch, rearrange, isSolved, lookUpIdx, copyCube, toBinaryString, encode, formatTime, turn, preview, rotateLocalYaw, rotatePitch
 if host:isHost() then
     rotateLocalYaw = function(rotationMatrix, angle)
         local yawMatrix = rotateY(angle)
@@ -255,6 +261,34 @@ if host:isHost() then
     
         -- Apply pitch rotation
         return multiplyMatrices(pitchMatrix, rotationMatrix)
+    end
+    local function containsValue(tbl,value)
+        for _, v in pairs(tbl) do
+            if v == value then return true end
+        end
+        return false
+    end
+    preview = function(piece,side)
+        if not solveMode or autosolving or scrambling or not containsValue(cube[side],lookUpIdx(piece)) then
+            return identity
+        end
+        local flip = not export.settings.flipLeftRightClick
+        if side=="yellow" and export.settings.flipLeftRightOnTopFace or side=="white" and export.settings.flipLeftRightOnBottomFace then
+            flip = not flip
+        end
+        if side == "red" then
+            return rotateX(flip and -export.settings.previewAmountDegrees or export.settings.previewAmountDegrees),rotations[piece]
+        elseif side == "orange" then
+            return rotateX(flip and export.settings.previewAmountDegrees or -export.settings.previewAmountDegrees),rotations[piece]
+        elseif side == "blue" then
+            return rotateZ(flip and -export.settings.previewAmountDegrees or export.settings.previewAmountDegrees),rotations[piece]
+        elseif side == "green" then
+            return rotateZ(flip and export.settings.previewAmountDegrees or -export.settings.previewAmountDegrees),rotations[piece]
+        elseif side == "white" then
+            return rotateY(flip and -export.settings.previewAmountDegrees or export.settings.previewAmountDegrees),rotations[piece]
+        elseif side == "yellow" then
+            return rotateY(flip and export.settings.previewAmountDegrees or -export.settings.previewAmountDegrees),rotations[piece]
+        end
     end
     turn = function(side,prime)
         if logMoves then
@@ -547,11 +581,11 @@ function pings.updateRubiksRotation(rot,offset)
 end
 
 local faceNormals = {
-    {name = "blue",  normal = {0, 0, 1}},
-    {name = "green",   normal = {0, 0, -1}},
-    {name = "orange",   normal = {-1, 0, 0}},
-    {name = "red",  normal = {1, 0, 0}},
-    {name = "white",    normal = {0, 1, 0}},
+    {name = "blue", normal = {0, 0, 1}},
+    {name = "green", normal = {0, 0, -1}},
+    {name = "orange", normal = {-1, 0, 0}},
+    {name = "red", normal = {1, 0, 0}},
+    {name = "white", normal = {0, 1, 0}},
     {name = "yellow", normal = {0, -1, 0}},
 }
 local function applyRotation(rotationMatrix, vector)
@@ -620,10 +654,11 @@ end
 
 function pings.rubiksResetCube()
     if host:isHost() then return end
-    local identity = {{1,0,0},{0,1,0},{0,0,1}}
+    -- local identity = {{1,0,0},{0,1,0},{0,0,1}}
     for _, piece in ipairs(pieces) do
         rotations[piece] = identity
         currentRotations[piece] = identity
+        previousRotations = identity
     end
 end
 
@@ -654,8 +689,9 @@ if host:isHost() then
             cube = copyCube(solvedCube)
             for _, piece in ipairs(pieces) do
                 piece:setRot(0,0,0)
-                rotations[piece] = {{1,0,0},{0,1,0},{0,0,1}}
-                currentRotations[piece] = {{1,0,0},{0,1,0},{0,0,1}}
+                rotations[piece] = identity
+                currentRotations[piece] = identity
+                previousRotations[piece] = identity
             end
             timing = false
             timer = 0
@@ -917,7 +953,7 @@ local function c(d)
     if d == 3 then return -1 end return d
 end
 
-local softCapInstructionsRemaining = avatar:getMaxTickCount()/2
+local softCapTickRemaining = avatar:getMaxTickCount()/3
 local restorePointDecode = 0
 local restorePointTurn = 0
 function events.TICK()
@@ -926,7 +962,7 @@ function events.TICK()
     local toremove = {}
     for i, entry in ipairs(queue) do
         if i >= restorePointDecode then
-            if avatar:getMaxTickCount()-avatar:getCurrentInstructions() > (330+softCapInstructionsRemaining) then
+            if avatar:getMaxTickCount()-avatar:getCurrentInstructions() > (330+softCapTickRemaining) then
                 restorePointDecode = 0
                 local data = entry.data
                 local value = data[entry.i]
@@ -964,9 +1000,13 @@ function events.TICK()
     for i, piece in ipairs(pieces) do
         if i >= restorePointTurn then
             restorePointTurn = 0
-            if avatar:getMaxTickCount()-avatar:getCurrentInstructions() > (410+softCapInstructionsRemaining) then
-                currentRotations[piece] = interpolateMatrices(currentRotations[piece],rotations[piece],0.35)
-                piece:setRot(extractEulerAngles(currentRotations[piece]))
+            if avatar:getMaxTickCount()-avatar:getCurrentInstructions() > (410+softCapTickRemaining) then
+                previousRotations[piece] = currentRotations[piece]
+                if export.settings.smoothPreview and host:isHost() then
+                    currentRotations[piece] = interpolateMatrices(currentRotations[piece],multiplyMatrices(preview(piece,selected),rotations[piece]),0.35)
+                else
+                    currentRotations[piece] = interpolateMatrices(currentRotations[piece],rotations[piece],0.35)
+                end
             else
                 restorePointTurn = i
                 break
@@ -975,6 +1015,8 @@ function events.TICK()
     end
 end
 
+local softCapRenderRemaining = avatar:getMaxRenderCount()/3
+local restorePointTurnRender = 0
 local _rubiksrotationmatrix = rubiksrotationmatrix
 local render = host:isHost() and events.WORLD_RENDER or events.POST_RENDER
 render:register(function(delta)
@@ -997,12 +1039,26 @@ render:register(function(delta)
         local r = vec(0,(player:isCrouching()and 19 or 22)+7*sin+7*cos,7*cos-7*sin)
         models.rubikscube.Rubiks:setPos((anchor:partToWorldMatrix():apply(r.x*siny+r.z*cosy, r.y, r.x*cosy-r.z*siny))*16)
     end
+    for i, piece in ipairs(pieces) do
+        if i >= restorePointTurnRender then
+            restorePointTurnRender = 0
+            if avatar:getMaxRenderCount()-avatar:getCurrentInstructions() > (410+softCapRenderRemaining) then
+                if export.settings.previewRightClickTurnDir and host:isHost() then
+                    piece:setRot(extractEulerAngles(multiplyMatrices(preview(piece,selected),interpolateMatrices(previousRotations[piece] or identity,currentRotations[piece],delta))))
+                else
+                    piece:setRot(extractEulerAngles(interpolateMatrices(previousRotations[piece] or identity,currentRotations[piece],delta)))
+                end
+            else
+                restorePointTurnRender = i
+                break
+            end
+        end
+    end
     if export.settings.vanillaModelPoses then
         if rubiksEnabled then
             local anim = math.sin(world.getTime(delta)*0.1)
             local r = vec(90+anim-pitch,15+anim*2-yaw,(sin+cos)*10)
             local l = vec(90-anim-pitch,-15-anim*2-yaw,(-sin-cos)*10)
-            local h = vec(-10,0,0)
             vanilla_model.RIGHT_ARM:setRot(r)
             vanilla_model.RIGHT_SLEEVE:setRot(r)
             vanilla_model.LEFT_ARM:setRot(l)
