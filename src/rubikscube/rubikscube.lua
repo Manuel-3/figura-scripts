@@ -881,6 +881,10 @@ function pings.manuel_2867_rubikscube_enabled(x)
     rubiksEnabled = x
 end
 
+function pings.manuel_2867_rubikscube_mode(x)
+    setCubeMode(x)
+end
+
 function pings.manuel_2867_rubikscube_reset()
     if host:isHost() then return end
     for _, piece in ipairs(pieces) do
@@ -1028,10 +1032,6 @@ if host:isHost() then
             end
         end)
 
-    function pings.manuel_2867_rubikscube_mode(x)
-        setCubeMode(x)
-    end
-
     local switchCubeAction = page:newAction()
         :title("Switch to 2x2")
         :toggleTitle("Switch to 3x3")
@@ -1070,8 +1070,8 @@ if host:isHost() then
             solveModeAction:toggled(false)
         end
         if world.getTime() % (20*5) == 0 then
-            pings.manuel_2867_rubikscube_enabled(rubiksEnabled)
             pings.manuel_2867_rubikscube_mode(cubeMode)
+            pings.manuel_2867_rubikscube_enabled(rubiksEnabled)
         end
         if rubiksEnabled and solveMode and world.getTime() % (20*0.5) == 0 then
             pings.manuel_2867_rubikscube_updateRotation(rubiksrotationmatrix, player:getRot().y)
