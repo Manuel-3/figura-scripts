@@ -232,16 +232,43 @@ for _, piece in pairs(pieces) do
     currentRotations[piece] = identity
     previousRotations[piece] = identity
 end
-
+local function configSave(key,value)
+    local prevName = config:getName()
+    config:setName("manuel_2867_rubikscube")
+    config:save(key,value)
+    config:setName(prevName)
+end
+local function configLoad(key)
+    local prevName = config:getName()
+    config:setName("manuel_2867_rubikscube")
+    local ret = config:load(key)
+    config:setName(prevName)
+    return ret
+end
 local cube = {}
-local cubemeta = {}
-local prevName = config:getName()
-config:setName("manuel_2867_rubikscube")
-local logMoves = config:load("logMoves")
-local rubiksEnabled = config:load("rubiksEnabled")
-local distance = config:load("distance")
-local timerEnabled = config:load("timerEnabled")
-local solvedCube, switch, rearrange, isSolved, lookUpIdx, copyCube, toBinaryString, encode, formatTime, turn, preview, rotateLocalYaw, rotatePitch
+cube.m = {}
+local logMoves = configLoad("logMoves")
+local rubiksEnabled = configLoad("rubiksEnabled")
+local distance = configLoad("distance")
+local timerEnabled = configLoad("timerEnabled")
+local cubeMode = configLoad("cubeMode")
+
+local slicePieces = {1,2,3,4,5,6,7,8,9,11,13,15,17,18,20,22,24,26}
+local cornerPieces = {10,12,14,16,19,21,23,25}
+local function setCubeMode(x)
+    cubeMode = x
+    configSave("cubeMode", cubeMode)
+    for _, i in ipairs(slicePieces) do
+        pieces[i]:setVisible(not x)
+    end
+    for _, i in ipairs(cornerPieces) do
+        pieces[i]:getChildren()[1]:setScale(x and 1.5 or 1)
+    end
+    models.rubikscube.Rubiks:setScale(x and 0.9 or 1)
+end
+setCubeMode(cubeMode or false)
+
+local solvedCube, slices, switch, rearrange, isSolved, lookUpIdx, copyCube, toBinaryString, encode, formatTime, turn, slice, preview, rotateLocalYaw, rotatePitch
 if host:isHost() then
     rotateLocalYaw = function(rotationMatrix, angle)
         local yawMatrix = rotateY(angle)
@@ -290,38 +317,61 @@ if host:isHost() then
             return rotateY(flip and export.settings.previewAmountDegrees or -export.settings.previewAmountDegrees),rotations[piece]
         end
     end
+    slice = function(side,prime)
+        if logMoves then
+            logJson(toJson{text=(string.upper(string.sub(side,1,1))).."M"..(prime and "'" or ""),color=(side=="orange" and "#ff8800" or side)})
+        end
+        if not autosolving then
+            table.insert(history, {side=side,prime=prime,m=true})
+        end
+        local changedPieces = {}
+        for _, i in ipairs(cube.m[side]) do
+            local piece = pieces[i]
+            if side == "red" then
+                rotations[piece] = multiplyMatrices(rotateX(prime and -90 or 90),rotations[piece])
+            elseif side == "orange" then
+                rotations[piece] = multiplyMatrices(rotateX(prime and 90 or -90),rotations[piece])
+            elseif side == "blue" then
+                rotations[piece] = multiplyMatrices(rotateZ(prime and -90 or 90),rotations[piece])
+            elseif side == "green" then
+                rotations[piece] = multiplyMatrices(rotateZ(prime and 90 or -90),rotations[piece])
+            elseif side == "white" then
+                rotations[piece] = multiplyMatrices(rotateY(prime and -90 or 90),rotations[piece])
+            elseif side == "yellow" then
+                rotations[piece] = multiplyMatrices(rotateY(prime and 90 or -90),rotations[piece])
+            end
+            changedPieces[lookUpIdx(piece)] = rotations[piece]
+        end
+        rearrange(side,prime,true)
+        pings.manuel_2867_rubikscube_update(encode(changedPieces))
+    end
     turn = function(side,prime)
         if logMoves then
             logJson(toJson{text=(string.upper(string.sub(side,1,1)))..(prime and "'" or ""),color=(side=="orange" and "#ff8800" or side)})
         end
         if not autosolving then
-            table.insert(history, {side=side,prime=prime})
+            table.insert(history, {side=side,prime=prime,m=false})
         end
         local changedPieces = {}
         for _, i in ipairs(cube[side]) do
             local piece = pieces[i]
             if side == "red" then
                 rotations[piece] = multiplyMatrices(rotateX(prime and -90 or 90),rotations[piece])
-                rearrange(side,prime)
             elseif side == "orange" then
                 rotations[piece] = multiplyMatrices(rotateX(prime and 90 or -90),rotations[piece])
-                rearrange(side,prime)
             elseif side == "blue" then
                 rotations[piece] = multiplyMatrices(rotateZ(prime and -90 or 90),rotations[piece])
-                rearrange(side,prime)
             elseif side == "green" then
                 rotations[piece] = multiplyMatrices(rotateZ(prime and 90 or -90),rotations[piece])
-                rearrange(side,prime)
             elseif side == "white" then
                 rotations[piece] = multiplyMatrices(rotateY(prime and -90 or 90),rotations[piece])
-                rearrange(side,prime)
             elseif side == "yellow" then
                 rotations[piece] = multiplyMatrices(rotateY(prime and 90 or -90),rotations[piece])
-                rearrange(side,prime)
             end
             changedPieces[lookUpIdx(piece)] = rotations[piece]
         end
-        pings.updateRubiksCube(encode(changedPieces))
+        rearrange(side,prime,false)
+        pings.manuel_2867_rubikscube_update(encode(changedPieces))
     end
     formatTime = function(ticks)
         local totalSeconds = ticks / 20
@@ -341,28 +391,32 @@ if host:isHost() then
     copyCube = function(c)
         local ret = {}
         for key, value in pairs(c) do
-            ret[key] = {}
-            for i = 1, 9 do
-                ret[key][i] = value[i]
+            if key == "m" then
+                ret.m = copyCube(c.m)
+            else
+                ret[key] = {}
+                for i = 1, #value do
+                    ret[key][i] = value[i]
+                end
             end
         end
         return ret
     end
     if logMoves == nil then
         logMoves = true
-        config:save("logMoves",logMoves)
+        configSave("logMoves",logMoves)
     end
     if rubiksEnabled == nil then
         rubiksEnabled = false
-        config:save("rubiksEnabled",rubiksEnabled)
+        configSave("rubiksEnabled",rubiksEnabled)
     end
     if distance == nil then
         distance = 1
-        config:save("distance",distance)
+        configSave("distance",distance)
     end
     if timerEnabled == nil then
         timerEnabled = true
-        config:save("timerEnabled",timerEnabled)
+        configSave("timerEnabled",timerEnabled)
     end
     cube.blue = {10, 11, 12, 1, 2, 3, 19, 20, 21}
     cube.red = {12, 13, 14, 3, 4, 5, 21, 22, 23}
@@ -370,164 +424,341 @@ if host:isHost() then
     cube.orange = {16, 9, 10, 7, 26, 1, 25, 18, 19}
     cube.yellow = {16, 15, 14, 9, 8, 13, 10, 11, 12}
     cube.white = {19, 20, 21, 18, 17, 22, 25, 24, 23}
-    cubemeta.blue = {
-        up = "yellow",
-        left = "orange",
-        right = "red",
-        down = "white"
+    cube.m.blue = {9,8,13,4,22,17,18,26}
+    cube.m.green = cube.m.blue
+    cube.m.red = {11,8,15,6,24,17,20,2}
+    cube.m.orange = cube.m.red
+    cube.m.white = {1,2,3,4,5,6,7,26}
+    cube.m.yellow = cube.m.white
+
+    local pairslist = {}
+    for side, pieces in pairs(cube) do
+        if side ~= "m" then
+            for index, value in ipairs(pieces) do
+                for otherside, otherpieces in pairs(cube) do
+                    if otherside ~= "m" then
+                        for otherindex, othervalue in ipairs(otherpieces) do
+                            if value==othervalue then
+                                pairslist[#pairslist+1] = {{side,index},{otherside,otherindex}}
+                            end
+                        end
+                    else
+                        for otherside2,otherpieces2 in pairs(otherpieces) do
+                            for otherindex2, othervalue2 in ipairs(otherpieces2) do
+                                if value==othervalue2 then
+                                    pairslist[#pairslist+1] = {{side,index},{otherside2,otherindex2,"M"}}
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        else
+            for side, pieces2 in pairs(pieces) do
+                for index, value in ipairs(pieces2) do
+                    for otherside, otherpieces in pairs(cube) do
+                        if otherside ~= "m" then
+                            for otherindex, othervalue in ipairs(otherpieces) do
+                                if value==othervalue then
+                                    pairslist[#pairslist+1] = {{side,index,"M"},{otherside,otherindex}}
+                                end
+                            end
+                        else
+                            for otherside2,otherpieces2 in pairs(otherpieces) do
+                                for otherindex2, othervalue2 in ipairs(otherpieces2) do
+                                    if value==othervalue2 then
+                                        pairslist[#pairslist+1] = {{side,index,"M"},{otherside2,otherindex2,"M"}}
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    events.TICK:register(function ()
+        for _, pair in ipairs(pairslist) do
+            if pair[1][3] == "M" and pair[2][3] == "M" then
+                if cube.m[pair[1][1]][pair[1][2]] ~= cube.m[pair[2][1]][pair[2][2]] then
+                    log("Mismatch",pair[1][1].."M"..pair[1][2],pair[2][1].."M"..pair[2][2])
+                end
+            elseif pair[1][3] == "M" then
+                if cube.m[pair[1][1]][pair[1][2]] ~= cube[pair[2][1]][pair[2][2]] then
+                    log("Mismatch",pair[1][1].."M"..pair[1][2],pair[2][1]..pair[2][2])
+                end
+            elseif pair[2][3] == "M" then
+                if cube[pair[1][1]][pair[1][2]] ~= cube.m[pair[2][1]][pair[2][2]] then
+                    log("Mismatch",pair[1][1]..pair[1][2],pair[2][1].."M"..pair[2][2])
+                end
+            else
+                if cube[pair[1][1]][pair[1][2]] ~= cube[pair[2][1]][pair[2][2]] then
+                    log("Mismatch",pair[1][1]..pair[1][2],pair[2][1]..pair[2][2])
+                end
+            end
+        end
+    end)
+
+    local mblue = function(fullold)
+        cube.yellow[4] = fullold.orange[8]
+        cube.yellow[5] = fullold.orange[5]
+        cube.yellow[6] = fullold.orange[2]
+        cube.orange[8] = fullold.white[6]
+        cube.orange[5] = fullold.white[5]
+        cube.orange[2] = fullold.white[4]
+        cube.white[6] = fullold.red[2]
+        cube.white[5] = fullold.red[5]
+        cube.white[4] = fullold.red[8]
+        cube.red[2] = fullold.yellow[4]
+        cube.red[5] = fullold.yellow[5]
+        cube.red[8] = fullold.yellow[6]
+        cube.m.red[2] = fullold.m.blue[8]
+        cube.m.red[6] = fullold.m.blue[4]
+        cube.m.white[4] = fullold.m.blue[2]
+        cube.m.white[8] = fullold.m.blue[6]
+        cube.m.orange = cube.m.red
+        cube.m.yellow = cube.m.white
+    end
+    local mred = function(fullold)
+        cube.yellow[2] = fullold.blue[2]
+        cube.yellow[5] = fullold.blue[5]
+        cube.yellow[8] = fullold.blue[8]
+        cube.blue[2] = fullold.white[2]
+        cube.blue[5] = fullold.white[5]
+        cube.blue[8] = fullold.white[8]
+        cube.white[2] = fullold.green[8]
+        cube.white[5] = fullold.green[5]
+        cube.white[8] = fullold.green[2]
+        cube.green[8] = fullold.yellow[2]
+        cube.green[5] = fullold.yellow[5]
+        cube.green[2] = fullold.yellow[8]
+
+        cube.m.blue[2] = fullold.m.red[8]
+        cube.m.blue[6] = fullold.m.red[4]
+        cube.m.white[2] = fullold.m.red[6]
+        cube.m.white[6] = fullold.m.red[2]
+        cube.m.green = cube.m.blue
+        cube.m.yellow = cube.m.white
+    end
+    local mwhite = function(fullold)
+        cube.blue[4] = fullold.orange[4]
+        cube.blue[5] = fullold.orange[5]
+        cube.blue[6] = fullold.orange[6]
+        cube.orange[4] = fullold.green[4]
+        cube.orange[5] = fullold.green[5]
+        cube.orange[6] = fullold.green[6]
+        cube.green[4] = fullold.red[4]
+        cube.green[5] = fullold.red[5]
+        cube.green[6] = fullold.red[6]
+        cube.red[4] = fullold.blue[4]
+        cube.red[5] = fullold.blue[5]
+        cube.red[6] = fullold.blue[6]
+
+        cube.m.red[4] = fullold.m.white[4]
+        cube.m.red[8] = fullold.m.white[8]
+        cube.m.blue[4] = fullold.m.white[2]
+        cube.m.blue[8] = fullold.m.white[6]
+        cube.m.orange = cube.m.red
+        cube.m.green = cube.m.blue
+    end
+
+    slices = {
+        ["blue"] = mblue,
+        ["red"] = mred,
+        ["green"] = mblue,
+        ["orange"] = mred,
+        ["yellow"] = mwhite,
+        ["white"] = mwhite,
     }
-    cubemeta.red = {
-        up = "yellow",
-        left = "blue",
-        right = "green",
-        down = "white"
-    }
-    cubemeta.green = {
-        up = "yellow",
-        left = "red",
-        right = "orange",
-        down = "white"
-    }
-    cubemeta.orange = {
-        up = "yellow",
-        left = "green",
-        right = "blue",
-        down = "white"
-    }
-    cubemeta.yellow = {
-        up = "green",
-        left = "orange",
-        right = "red",
-        down = "blue"
-    }
-    cubemeta.white = {
-        up = "blue",
-        left = "orange",
-        right = "red",
-        down = "green"
-    }
+
     solvedCube = copyCube(cube)
     switch = {
-        ["blue"] = function(old, meta)
-            cube[meta.left][3] = old[7]
-            cube[meta.left][6] = old[8]
-            cube[meta.left][9] = old[9]
-            cube[meta.right][1] = old[1]
-            cube[meta.right][4] = old[2]
-            cube[meta.right][7] = old[3]
-            cube["yellow"][7] = old[7]
-            cube["yellow"][8] = old[4]
-            cube["yellow"][9] = old[1]
-            cube["white"][1] = old[9]
-            cube["white"][2] = old[6]
-            cube["white"][3] = old[3]
+        ["blue"] = function(old)
+            cube.orange[3] = old[7]
+            cube.orange[6] = old[8]
+            cube.orange[9] = old[9]
+            cube.red[1] = old[1]
+            cube.red[4] = old[2]
+            cube.red[7] = old[3]
+            cube.yellow[7] = old[7]
+            cube.yellow[8] = old[4]
+            cube.yellow[9] = old[1]
+            cube.white[1] = old[9]
+            cube.white[2] = old[6]
+            cube.white[3] = old[3]
+            cube.m.red[1] = old[4]
+            cube.m.red[7] = old[6]
+            cube.m.white[1] = old[8]
+            cube.m.white[3] = old[2]
+            cube.m.orange = cube.m.red
+            cube.m.yellow = cube.m.white
         end,
-        ["red"] = function(old, meta)
-            cube[meta.left][3] = old[7]
-            cube[meta.left][6] = old[8]
-            cube[meta.left][9] = old[9]
-            cube[meta.right][1] = old[1]
-            cube[meta.right][4] = old[2]
-            cube[meta.right][7] = old[3]
-            cube["yellow"][3] = old[1]
-            cube["yellow"][6] = old[4]
-            cube["yellow"][9] = old[7]
-            cube["white"][3] = old[9]
-            cube["white"][6] = old[6]
-            cube["white"][9] = old[3]
+        ["red"] = function(old)
+            cube.blue[3] = old[7]
+            cube.blue[6] = old[8]
+            cube.blue[9] = old[9]
+            cube.green[1] = old[1]
+            cube.green[4] = old[2]
+            cube.green[7] = old[3]
+            cube.yellow[3] = old[1]
+            cube.yellow[6] = old[4]
+            cube.yellow[9] = old[7]
+            cube.white[3] = old[9]
+            cube.white[6] = old[6]
+            cube.white[9] = old[3]
+            cube.m.blue[3] = old[4]
+            cube.m.blue[5] = old[6]
+            cube.m.white[3] = old[8]
+            cube.m.white[5] = old[2]
+            cube.m.green = cube.m.blue
+            cube.m.yellow = cube.m.white
         end,
-        ["green"] = function(old, meta)
-            cube[meta.left][3] = old[7]
-            cube[meta.left][6] = old[8]
-            cube[meta.left][9] = old[9]
-            cube[meta.right][1] = old[1]
-            cube[meta.right][4] = old[2]
-            cube[meta.right][7] = old[3]
-            cube["yellow"][1] = old[1]
-            cube["yellow"][2] = old[4]
-            cube["yellow"][3] = old[7]
-            cube["white"][7] = old[3]
-            cube["white"][8] = old[6]
-            cube["white"][9] = old[9]
+        ["green"] = function(old)
+            cube.red[3] = old[7]
+            cube.red[6] = old[8]
+            cube.red[9] = old[9]
+            cube.orange[1] = old[1]
+            cube.orange[4] = old[2]
+            cube.orange[7] = old[3]
+            cube.yellow[1] = old[1]
+            cube.yellow[2] = old[4]
+            cube.yellow[3] = old[7]
+            cube.white[7] = old[3]
+            cube.white[8] = old[6]
+            cube.white[9] = old[9]
+            cube.m.red[3] = old[4]
+            cube.m.red[5] = old[6]
+            cube.m.white[5] = old[8]
+            cube.m.white[7] = old[2]
+            cube.m.orange = cube.m.red
+            cube.m.yellow = cube.m.white
         end,
-        ["orange"] = function(old, meta)
-            cube[meta.left][3] = old[7]
-            cube[meta.left][6] = old[8]
-            cube[meta.left][9] = old[9]
-            cube[meta.right][1] = old[1]
-            cube[meta.right][4] = old[2]
-            cube[meta.right][7] = old[3]
-            cube["yellow"][1] = old[7]
-            cube["yellow"][4] = old[4]
-            cube["yellow"][7] = old[1]
-            cube["white"][1] = old[3]
-            cube["white"][4] = old[6]
-            cube["white"][7] = old[9]
+        ["orange"] = function(old)
+            cube.green[3] = old[7]
+            cube.green[6] = old[8]
+            cube.green[9] = old[9]
+            cube.blue[1] = old[1]
+            cube.blue[4] = old[2]
+            cube.blue[7] = old[3]
+            cube.yellow[1] = old[7]
+            cube.yellow[4] = old[4]
+            cube.yellow[7] = old[1]
+            cube.white[1] = old[3]
+            cube.white[4] = old[6]
+            cube.white[7] = old[9]
+            cube.m.blue[1] = old[4]
+            cube.m.blue[7] = old[6]
+            cube.m.white[7] = old[8]
+            cube.m.white[1] = old[2]
+            cube.m.green = cube.m.blue
+            cube.m.yellow = cube.m.white
         end,
-        ["yellow"] = function(old, meta)
-            cube["orange"][1] = old[7]
-            cube["orange"][2] = old[8]
-            cube["orange"][3] = old[9]
-            cube["red"][1] = old[3]
-            cube["red"][2] = old[2]
-            cube["red"][3] = old[1]
-            cube["blue"][1] = old[9]
-            cube["blue"][2] = old[6]
-            cube["blue"][3] = old[3]
-            cube["green"][1] = old[1]
-            cube["green"][2] = old[4]
-            cube["green"][3] = old[7]
+        ["yellow"] = function(old)
+            cube.orange[1] = old[7]
+            cube.orange[2] = old[8]
+            cube.orange[3] = old[9]
+            cube.red[1] = old[3]
+            cube.red[2] = old[2]
+            cube.red[3] = old[1]
+            cube.blue[1] = old[9]
+            cube.blue[2] = old[6]
+            cube.blue[3] = old[3]
+            cube.green[1] = old[1]
+            cube.green[2] = old[4]
+            cube.green[3] = old[7]
+            cube.m.red[1] = old[6]
+            cube.m.red[3] = old[4]
+            cube.m.blue[1] = old[8]
+            cube.m.blue[3] = old[2]
+            cube.m.orange = cube.m.red
+            cube.m.green = cube.m.blue
         end,
-        ["white"] = function(old, meta)
-            cube["orange"][7] = old[9]
-            cube["orange"][8] = old[8]
-            cube["orange"][9] = old[7]
-            cube["red"][7] = old[1]
-            cube["red"][8] = old[2]
-            cube["red"][9] = old[3]
-            cube["blue"][7] = old[7]
-            cube["blue"][8] = old[4]
-            cube["blue"][9] = old[1]
-            cube["green"][7] = old[3]
-            cube["green"][8] = old[6]
-            cube["green"][9] = old[9]
+        ["white"] = function(old)
+            cube.orange[7] = old[9]
+            cube.orange[8] = old[8]
+            cube.orange[9] = old[7]
+            cube.red[7] = old[1]
+            cube.red[8] = old[2]
+            cube.red[9] = old[3]
+            cube.blue[7] = old[7]
+            cube.blue[8] = old[4]
+            cube.blue[9] = old[1]
+            cube.green[7] = old[3]
+            cube.green[8] = old[6]
+            cube.green[9] = old[9]
+            cube.m.red[7] = old[4]
+            cube.m.red[5] = old[6]
+            cube.m.blue[7] = old[8]
+            cube.m.blue[5] = old[2]
+            cube.m.orange = cube.m.red
+            cube.m.green = cube.m.blue
         end
     }
+    local slicePiecesOnSideId = {2,4,5,6,8}
     isSolved = function()
         for piece, value in pairs(rotations) do
             local idx = lookUpIdx(piece)
-            if idx ~= 2 and idx ~= 4 and idx ~= 6 and idx ~= 8 and idx ~= 17 and idx ~= 26 then
-                local x,y,z = extractEulerAngles(value)
-                if math.round(x) ~= 0 or math.round(y) ~= 0 or math.round(z) ~= 0 then
-                    return false
+            if cubeMode and not containsValue(slicePieces,idx) or not cubeMode then
+                if idx ~= 2 and idx ~= 4 and idx ~= 6 and idx ~= 8 and idx ~= 17 and idx ~= 26 then
+                    local x,y,z = extractEulerAngles(value)
+                    if math.round(x) ~= 0 or math.round(y) ~= 0 or math.round(z) ~= 0 then
+                        return false
+                    end
                 end
             end
         end
         for side, contents in pairs(solvedCube) do
             for i = 1, 9 do
-                if cube[side][i] ~= contents[i] then
-                    return false
+                if cubeMode and not containsValue(slicePiecesOnSideId,i) or not cubeMode then
+                    if cube[side][i] ~= contents[i] then
+                        return false
+                    end
                 end
             end
         end
         return true
     end
-    rearrange = function(side,prime)
+    local opposite = {
+        ["blue"] = "green",
+        ["red"] = "orange",
+        ["white"] = "yellow",
+        ["green"] = "blue",
+        ["orange"] = "red",
+        ["yellow"] = "white",
+    }
+    rearrange = function(side,prime,m)
         local repeats = prime and 3 or 1
+        if m and (side=="orange" or side=="green" or side=="yellow") then
+            repeats = prime and 1 or 3
+        end
         for _ = 1,repeats do
-            local meta = cubemeta[side]
-            local old = cube[side]
-            cube[side] = {}
-            cube[side][1] = old[7]
-            cube[side][2] = old[4]
-            cube[side][3] = old[1]
-            cube[side][4] = old[8]
-            cube[side][5] = old[5]
-            cube[side][6] = old[2]
-            cube[side][7] = old[9]
-            cube[side][8] = old[6]
-            cube[side][9] = old[3]
-            switch[side](old, meta)
+            if m then
+                local old = cube.m[side]
+                slices[side](copyCube(cube))
+                cube.m[side] = {}
+                cube.m[side][1] = old[7]
+                cube.m[side][2] = old[8]
+                cube.m[side][3] = old[1]
+                cube.m[side][4] = old[2]
+                cube.m[side][5] = old[3]
+                cube.m[side][6] = old[4]
+                cube.m[side][7] = old[5]
+                cube.m[side][8] = old[6]
+                cube.m[opposite[side]] = cube.m[side]
+            else
+                local old = cube[side]
+                cube[side] = {}
+                cube[side][1] = old[7]
+                cube[side][2] = old[4]
+                cube[side][3] = old[1]
+                cube[side][4] = old[8]
+                cube[side][5] = old[5]
+                cube[side][6] = old[2]
+                cube[side][7] = old[9]
+                cube[side][8] = old[6]
+                cube[side][9] = old[3]
+                switch[side](old)
+            end
         end
     end
     lookUpIdx = function(piece)
@@ -556,11 +787,10 @@ if host:isHost() then
         return table.unpack(data)
     end
 end
-config:setName(prevName)
 
 local queue = {}
 
-function pings.updateRubiksCube(...)
+function pings.manuel_2867_rubikscube_update(...)
     if host:isHost() then return end
     if #{...} == 10 then
         error({...})
@@ -573,7 +803,7 @@ local anchor = models:newPart("rubikscube_anchor_point")
 local selected = "blue"
 models.rubikscube.Rubiks:setParentType("World")
 
-function pings.updateRubiksRotation(rot,offset)
+function pings.manuel_2867_rubikscube_updateRotation(rot,offset)
     if not host:isHost() then
         yRotOffset = offset
         rubiksrotationmatrix = rot
@@ -636,7 +866,7 @@ local solveModeAction = page:newAction()
         actionWasSelected = true
         solveMode = x
         if player:isLoaded() then
-            pings.updateRubiksRotation(rubiksrotationmatrix, player:getRot().y)
+            pings.manuel_2867_rubikscube_updateRotation(rubiksrotationmatrix, player:getRot().y)
         end
         if solveMode then
             rubiksrotationmatrix = multiplyMatrices(rotateY(yRotOffset-player:getRot().y),rubiksrotationmatrix)
@@ -647,13 +877,12 @@ local solveModeAction = page:newAction()
     end)
     :toggled(solveMode)
 
-function pings.rubiksEnabled(x)
+function pings.manuel_2867_rubikscube_enabled(x)
     rubiksEnabled = x
 end
 
-function pings.rubiksResetCube()
+function pings.manuel_2867_rubikscube_reset()
     if host:isHost() then return end
-    -- local identity = {{1,0,0},{0,1,0},{0,0,1}}
     for _, piece in ipairs(pieces) do
         rotations[piece] = identity
         currentRotations[piece] = identity
@@ -669,11 +898,8 @@ if host:isHost() then
         :onToggle(function(x)
             actionWasSelected = true
             rubiksEnabled = x
-            prevName = config:getName()
-            config:setName("manuel_2867_rubikscube")
-            config:save("rubiksEnabled", x)
-            config:setName(prevName)
-            pings.rubiksEnabled(x)
+            configSave("rubiksEnabled", x)
+            pings.manuel_2867_rubikscube_enabled(x)
         end)
         :toggled(rubiksEnabled)
 
@@ -684,7 +910,7 @@ if host:isHost() then
         :onLeftClick(function()
             actionWasSelected = true
             if autosolving then return end
-            pings.rubiksResetCube()
+            pings.manuel_2867_rubikscube_reset()
             cube = copyCube(solvedCube)
             for _, piece in ipairs(pieces) do
                 piece:setRot(0,0,0)
@@ -727,10 +953,7 @@ if host:isHost() then
         :onToggle(function(x)
             actionWasSelected = true
             logMoves = x
-            prevName = config:getName()
-            config:setName("manuel_2867_rubikscube")
-            config:save("logMoves", x)
-            config:setName(prevName)
+            configSave("logMoves", x)
         end)
         :toggled(logMoves)
 
@@ -744,10 +967,7 @@ if host:isHost() then
             actionWasSelected = true
             distance = distance + x*0.05
             distanceAction:title("Distance "..distance.." (Scroll)"):hoverTexture(spyglass,0,0,spyglass:getDimensions().x,spyglass:getDimensions().y,2-distance)
-            prevName = config:getName()
-            config:setName("manuel_2867_rubikscube")
-            config:save("distance", distance)
-            config:setName(prevName)
+            configSave("distance", distance)
         end)
     local timerEnabledActionCounter = timerEnabled and 0 or 32
     local timerEnabledAction = page:newAction()
@@ -759,10 +979,7 @@ if host:isHost() then
             timerEnabled = x
             timing = false
             timer = 0
-            prevName = config:getName()
-            config:setName("manuel_2867_rubikscube")
-            config:save("timerEnabled", x)
-            config:setName(prevName)
+            configSave("timerEnabled", x)
         end)
         :toggled(timerEnabled)
 
@@ -777,10 +994,7 @@ if host:isHost() then
         :toggleColor(0,0,0)
         :onLeftClick(function()
             actionWasSelected = true
-            prevName = config:getName()
-            config:setName("manuel_2867_rubikscube")
-            local times = config:load("times")
-            config:setName(prevName)
+            local times = configLoad("times")
             if times == nil then times = {} end
             local pb = math.huge
             local j = 0
@@ -790,13 +1004,43 @@ if host:isHost() then
                     j = i
                 end
             end
+            local resave = false
+            local prevDate = ""
             for i, entry in ipairs(times) do
+                local date = string.sub(entry.date, 1, string.find(entry.date, " ") - 1)
+                local time = string.sub(entry.date, string.find(entry.date, " ") + 1)
+                if entry.mode == nil then
+                    entry.mode = "3x3"
+                    resave = true
+                end
                 logJson(toJson{
-                    {text=entry.date,color="gray"},
-                    {text=" => ", color="white"},
-                    {text=formatTime(entry.amount).."\n", color=(j==i and "gold" or "yellow")}
+                    {text=date.." ",color=(prevDate ~= date) and "white" or "gray"},
+                    {text=time,color="gray"},
+                    {text=" => ", color="gray"},
+                    {text=formatTime(entry.amount), color=(j==i and "gold" or "yellow")},
+                    {text=" - ", color="gray"},
+                    {text=entry.mode.."\n", color=(entry.mode=="3x3" and "green" or "aqua")}
                 })
+                prevDate = date
             end
+            if resave then 
+                configSave("times",times)
+            end
+        end)
+
+    function pings.manuel_2867_rubikscube_mode(x)
+        setCubeMode(x)
+    end
+
+    local switchCubeAction = page:newAction()
+        :title("Switch to 2x2")
+        :toggleTitle("Switch to 3x3")
+        :item("minecraft:light_blue_wool")
+        :toggleItem("minecraft:lime_wool")
+        :toggleColor(0,0,0)
+        :onToggle(function(x)
+            actionWasSelected = true
+            pings.manuel_2867_rubikscube_mode(x)
         end)
 
     local action_wheel_wasEnabled = false
@@ -826,10 +1070,11 @@ if host:isHost() then
             solveModeAction:toggled(false)
         end
         if world.getTime() % (20*5) == 0 then
-            pings.rubiksEnabled(rubiksEnabled)
+            pings.manuel_2867_rubikscube_enabled(rubiksEnabled)
+            pings.manuel_2867_rubikscube_mode(cubeMode)
         end
         if rubiksEnabled and solveMode and world.getTime() % (20*0.5) == 0 then
-            pings.updateRubiksRotation(rubiksrotationmatrix, player:getRot().y)
+            pings.manuel_2867_rubikscube_updateRotation(rubiksrotationmatrix, player:getRot().y)
         end
         if scrambling and world.getTime()%export.settings.scrambleDelay==0 then
             turn(scramble[scrambleprogress].side, scramble[scrambleprogress].prime)
@@ -839,7 +1084,11 @@ if host:isHost() then
             end
         end
         if autosolving and world.getTime()%export.settings.autosolveDelay==0 then
-            turn(history[autosolveprogress].side, not history[autosolveprogress].prime)
+            if history[autosolveprogress].m then
+                slice(history[autosolveprogress].side, not history[autosolveprogress].prime)
+            else
+                turn(history[autosolveprogress].side, not history[autosolveprogress].prime)
+            end
             history[autosolveprogress] = nil
             autosolveprogress = autosolveprogress - 1
             if autosolveprogress < 1 then
@@ -886,18 +1135,15 @@ if host:isHost() then
         solveModeAction:toggled(false)
         if timerEnabled then
             timing = false
-            prevName = config:getName()
-            config:setName("manuel_2867_rubikscube")
-            local times = config:load("times")
+            local times = configLoad("times")
             if times == nil then times = {} end
             local date = client.getDate()
-            table.insert(times, {date=date.month.."/"..date.day.."/"..date.year.." "..date.hour..":"..date.minute..":"..date.second,amount=timer})
-            config:save("times",times)
-            config:setName(prevName)
+            table.insert(times, {date=date.month.."/"..date.day.."/"..date.year.." "..string.format("%02d", date.hour)..":"..string.format("%02d", date.minute)..":"..string.format("%02d", date.second),amount=timer,mode=cubeMode and "2x2" or "3x3"})
+            configSave("times",times)
         end
     end
     
-    keybinds:fromVanilla("key.attack"):onPress(function()
+    keybinds:newKeybind("Rubiks Unturn", "key.mouse.left"):onPress(function()
         local wasSolveMode = solveMode
         if not (rubiksEnabled and solveMode and not scrambling and not autosolving) then return false end
         if not timing then
@@ -916,7 +1162,7 @@ if host:isHost() then
         return export.settings.disableWorldInteractions and wasSolveMode
     end)
     
-    keybinds:fromVanilla("key.use"):onPress(function()
+    keybinds:newKeybind("Rubiks Turn","key.mouse.right"):onPress(function()
         local wasSolveMode = solveMode
         if not (rubiksEnabled and solveMode and not scrambling and not autosolving) then return false end
         if not timing then
@@ -934,6 +1180,31 @@ if host:isHost() then
         end
         return export.settings.disableWorldInteractions and wasSolveMode
     end)
+
+    --[[
+    function events.MOUSE_SCROLL(dir)
+        
+        local wasSolveMode = solveMode
+        if not (rubiksEnabled and solveMode and not scrambling and not autosolving) then return false end
+        if not timing then
+            timing = true
+            timer = 0
+        end
+        local prime = export.settings.flipLeftRightClick
+        if selected=="yellow" and export.settings.flipLeftRightOnTopFace or selected=="white" and export.settings.flipLeftRightOnBottomFace then
+            prime = not prime
+        end
+        if dir == -1 then
+            prime = not prime
+        end
+        slice(selected,not prime)
+        solvedState = isSolved()
+        if solvedState then
+            whenSolved()
+        end
+        return export.settings.disableWorldInteractions and wasSolveMode
+    end
+    ]]
     
     keybinds:fromVanilla("key.forward"):onPress(function()
         return export.settings.disableWalking and solveMode
