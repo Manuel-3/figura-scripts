@@ -12,6 +12,19 @@ local loading = false
 local newentry = false
 local newtbl = false
 
+-- Fix figura_function not being recognized in action bar
+HostAPIsetActionbar = figuraMetatables.HostAPI.__index.setActionbar
+figuraMetatables.HostAPI.__index.setActionbar = function(self,content)
+    content = parseJson(content)
+    if type(content) == "table" then
+        for _, entry in pairs(content) do
+            entry.clickEvent = nil
+        end
+    end
+    HostAPIsetActionbar(self,toJson(content))
+end
+-- End fix
+
 function events.entity_init()
     playername = player:getName()
 end
@@ -348,7 +361,7 @@ local function draw(tbl,ind,path)
                             color="dark_gray"
                         },
                         {
-                            text=k,
+                            text=tostring(k),
                             color="gray"
                         },
                         {
@@ -372,7 +385,7 @@ local function draw(tbl,ind,path)
                                 color="yellow"
                             },
                             {
-                                text=k,
+                                text=tostring(k),
                                 color="white"
                             }
                         }
@@ -386,7 +399,7 @@ local function draw(tbl,ind,path)
                             color="black"
                         },
                         {
-                            text=v,
+                            text=tostring(v),
                             color=color(v)
                         },
                         {
@@ -409,7 +422,7 @@ local function draw(tbl,ind,path)
                                 color="green"
                             },
                             {
-                                text=k,
+                                text=tostring(k),
                                 color="white"
                             }
                         }
@@ -425,7 +438,7 @@ local function draw(tbl,ind,path)
                         color="dark_gray"
                     },
                     {
-                        text=k,
+                        text=tostring(k),
                         color=light_blue
                     },
                     {
@@ -452,7 +465,7 @@ local function draw(tbl,ind,path)
                             color="yellow"
                         },
                         {
-                            text=k,
+                            text=tostring(k),
                             color="white"
                         }
                     }
@@ -635,6 +648,7 @@ function ConfigEditor:open(name)
 end
 
 function events.chat_send_message(message)
+    if message == nil then return nil end
     if editing then
         local revert = config:getName()
         local success, err = pcall(function()
