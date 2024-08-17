@@ -1,7 +1,7 @@
 -- Example script using config editor
 local configeditor = require("configeditor")
 
--- Use this at the start of your script to let users of your avatar/libarry/whatever know, that config editor is installed
+-- Use this at the start of your script to let users of your avatar/library/whatever know, that config editor is installed
 configeditor:printInfo()
 
 -- Similar to config:setName()
