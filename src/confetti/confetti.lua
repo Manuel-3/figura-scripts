@@ -31,7 +31,8 @@ local ConfettoOptions = {}
 ---@param lifetime number|nil Lifetime in ticks
 ---@return nil
 function Confetti.registerMesh(name, mesh, lifetime)
-    if mesh and mesh:getType() ~= "GROUP" then logJson('[{color="yellow",text="[WARNING] "},{color:"white",text:"You are creating a particle by targeting a model part directly, instead of a group. This can cause unexpected behavior. It is recommended to use a group that is positioned at (0,0,0) instead. If you know what you are doing, to get rid of this warning simply delete this line of code."}]') end
+    assert(mesh, "Model Part does not exist! Double check the path, spelling, and if you saved your model file.")
+    if mesh:getType() ~= "GROUP" then logJson('[{color="yellow",text="[WARNING] "},{color:"white",text:"You are creating a particle by targeting a model part directly, instead of a group. This can cause unexpected behavior. It is recommended to use a group that is positioned at (0,0,0) instead. If you know what you are doing, to get rid of this warning simply delete this line of code."}]') end
     Particles[name] = {mesh=mesh,lifetime=lifetime or 20}
     mesh:setVisible(false)
 end
@@ -44,6 +45,10 @@ end
 ---@param pivot Vector2|nil Offset to change pivot point. 0,0 is top left corner. Default is in center.
 ---@return nil
 function Confetti.registerSprite(name, sprite, bounds, lifetime, pivot)
+    if not sprite then
+        logTable(textures:getTextures())
+        error("Texture does not exist. Use the correct name shown in the list above. It may need a model name before the texture name separated by a dot.")
+    end
     Particles[name] = {sprite=sprite,bounds=bounds,lifetime=lifetime or 20,pivot=pivot or vec((bounds.y-bounds.x)/2,(bounds.w-bounds.z)/2)}
 end
 

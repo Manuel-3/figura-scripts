@@ -1,3 +1,17 @@
+--TODO
+-- logs are messed up because slice moves
+-- corners sides get switched thats why
+
+-- change it so slice is more intuitive, perpendicular to face
+
+
+
+
+
+
+
+
+
 -- Rubiks Cube by manuel_2867
 
 -- Settings
