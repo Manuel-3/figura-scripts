@@ -8,7 +8,9 @@ Stretches a plane into 4 defined spots on your model. Works with animations.
 
 Put empty groups at the positions the membrane should attach corners to. These groups should be 
 
-Add a cube, make it completely flat so only the front (north/south) side is used, set all other sides to use the "Transparent" texture (right click on the UV editing window, and select "Texture > Transparent"), which makes it so Figura doesn't load these faces. Only the front and back should have an actual texture.
+Add a cube for the membrane, make it completely flat so only the front (north/south) side is used, set all other sides to use the "Transparent" texture (right click on the UV editing window, and select "Texture > Transparent"), which makes it so Figura doesn't load these faces. Only the front and back should have an actual texture.
+
+This membrane cube should be centered at 0,0,0 in the middle of the grid in BlockBench.
 
 Then, add the `membrane.lua` file into your avatar, and configure it **in your own script** like this:
 
