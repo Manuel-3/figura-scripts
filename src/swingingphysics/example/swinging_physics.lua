@@ -207,16 +207,15 @@ function SwingingPhysics.swingOnHead(part, dir, limits, root, depth)
         velocity = velocity * (1-friction*math.pow(1.5, handler.depth))
 
         rot = rot + velocity
-    end
-    if handler.limits ~= nil then function events.tick()
-        if not handler.enabled then return end
+
+        if not handler.limits then return end
         if rot.x < handler.limits[1] then rot.x = handler.limits[1] velocity.x = 0 end
         if rot.x > handler.limits[2] then rot.x = handler.limits[2] velocity.x = 0 end
         if rot.y < handler.limits[3] then rot.y = handler.limits[3] velocity.y = 0 end
         if rot.y > handler.limits[4] then rot.y = handler.limits[4] velocity.y = 0 end
         if rot.z < handler.limits[5] then rot.z = handler.limits[5] velocity.z = 0 end
         if rot.z > handler.limits[6] then rot.z = handler.limits[6] velocity.z = 0 end
-    end end
+    end
     function events.render(delta)
         if not handler.enabled then return end
         handler.part:setOffsetRot(lerp(_rot, rot, delta))
@@ -300,16 +299,15 @@ function SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
         velocity = velocity * (1-friction*math.pow(1.5, handler.depth))
 
         rot = rot + velocity
-    end
-    if handler.limits ~= nil then function events.tick()
-        if not handler.enabled then return end
+
+        if not handler.limits then return end
         if rot.x < handler.limits[1] then rot.x = handler.limits[1] velocity.x = 0 end
         if rot.x > handler.limits[2] then rot.x = handler.limits[2] velocity.x = 0 end
         if rot.y < handler.limits[3] then rot.y = handler.limits[3] velocity.y = 0 end
         if rot.y > handler.limits[4] then rot.y = handler.limits[4] velocity.y = 0 end
         if rot.z < handler.limits[5] then rot.z = handler.limits[5] velocity.z = 0 end
         if rot.z > handler.limits[6] then rot.z = handler.limits[6] velocity.z = 0 end
-    end end
+    end
     function events.render(delta)
         if not handler.enabled then return end
         handler.part:setOffsetRot(lerp(_rot, rot, delta))

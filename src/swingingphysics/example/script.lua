@@ -18,7 +18,8 @@ swingOnHead(models.example.Head.left, 90, {-90,90,-90,90,-90,10})
 
 -- Without collision (takes less instructions):
 swingOnHead(models.example.Head.right, 270)
-swingOnHead(models.example.Head.back, 180)
+local a = swingOnHead(models.example.Head.back, 180)
+a:setLimits({0,0,0,0,-10,10})
 swingOnHead(models.example.Head.forwardleft, 45)
 
 -- Demonstration of chaining
