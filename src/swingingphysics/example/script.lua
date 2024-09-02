@@ -14,12 +14,11 @@ local swingOnBody = SwingingPhysics.swingOnBody
 
 -- Demonstration of collision with head (walk side to side to test):
 -- NOTE its only the left one that has collision
-swingOnHead(models.example.Head.left, 90, {-90,90,-90,90,-90,10})
+local head_left_swinghandler = swingOnHead(models.example.Head.left, 90, {-90,90,-90,90,-90,10})
 
 -- Without collision (takes less instructions):
 swingOnHead(models.example.Head.right, 270)
-local a = swingOnHead(models.example.Head.back, 180)
-a:setLimits({0,0,0,0,-10,10})
+swingOnHead(models.example.Head.back, 180)
 swingOnHead(models.example.Head.forwardleft, 45)
 
 -- Demonstration of chaining
@@ -35,3 +34,5 @@ swingOnBody(models.example.Body.back, 180)
 -- Example to enable or disable swinging
 local body_right_swinghandler = swingOnBody(models.example.Body.right, 270)
 body_right_swinghandler:setEnabled(false)
+-- Example of changing limits
+head_left_swinghandler:setLimits({-90,90,-90,90,-90,10})
