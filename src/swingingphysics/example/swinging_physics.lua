@@ -104,10 +104,31 @@ function events.tick()
 end
 
 ---@class SwingHandler
-local SwingHandler = {
-    ---@param enabled boolean
-    setEnabled = function(self, enabled) end
-}
+local SwingHandler = {}
+---@param enabled boolean
+function SwingHandler:setEnabled(enabled)end
+---@return boolean
+function SwingHandler:getEnabled()end
+---@param part ModelPart
+function SwingHandler:setPart(part)end
+---@return ModelPart
+function SwingHandler:getPart()end
+---@param dir number
+function SwingHandler:setDir(dir)end
+---@return number
+function SwingHandler:getDir()end
+---@param limits table
+function SwingHandler:setLimits(limits)end
+---@return table
+function SwingHandler:getLimits()end
+---@param root ModelPart
+function SwingHandler:setRoot(root)end
+---@return ModelPart
+function SwingHandler:getRoot()end
+---@param depth number
+function SwingHandler:setDepth(depth)end
+---@return number
+function SwingHandler:getDepth()end
 
 --- Adds swinging physics to a part that is attached to the head
 ---@param part ModelPart The model part that should swing
@@ -122,19 +143,49 @@ function SwingingPhysics.swingOnHead(part, dir, limits, root, depth)
     local rot = vec(0,0,0)
     local velocity = vec(0,0,0)
     if depth == nil then depth = 0 end
-    local fric = friction*math.pow(1.5, depth)
     local handler = {
         ---@type SwingHandler
     }
     handler.enabled = true
-    ---@param enabled boolean
+    handler.part = part
+    handler.dir = dir
+    handler.limits = limits
+    handler.root = root
+    handler.depth = depth
     function handler:setEnabled(enabled)
         self.enabled = enabled
         if not self.enabled then
             rot = vec(0,0,0)
             _rot = rot
-            part:setOffsetRot(rot)
+            self.part:setOffsetRot(rot)
         end
+    end
+    function handler:getEnabled()
+        return self.enabled
+    end
+    function handler:setPart(part)
+        self.part = part
+    end
+    function handler:getPart()
+        return self.part
+    end
+    function handler:setDir(dir)
+        self.dir = dir
+    end
+    function handler:getDir()
+        return self.dir
+    end
+    function handler:setLimits(limits)
+        self.limits = limits
+    end
+    function handler:getLimits()
+        return self.limits
+    end
+    function handler:setRoot(root)
+        self.root = root
+    end
+    function handler:getRoot()
+        return self.root
     end
     function events.tick()
         if not handler.enabled then return end
@@ -142,34 +193,33 @@ function SwingingPhysics.swingOnHead(part, dir, limits, root, depth)
         _rot = rot
 
         local grav
-        if root ~= nil then
-            grav = ((downHead - root:getOffsetRot()) - rot) * gravity
+        if handler.root ~= nil then
+            grav = ((downHead - handler.root:getOffsetRot()) - rot) * gravity
         else
             grav = (downHead - rot) * gravity
         end
         
         velocity = velocity + grav + vec(
-            sin(dir)*forceHead-cos(moveAngle)*playerSpeed+cos(dir)*math.abs(forceHead)*centrifugalForce,
+            sin(handler.dir)*forceHead-cos(moveAngle)*playerSpeed+cos(handler.dir)*math.abs(forceHead)*centrifugalForce,
             0,
-            cos(dir)*forceHead+sin(moveAngle)*playerSpeed-sin(dir)*math.abs(forceHead)*centrifugalForce
+            cos(handler.dir)*forceHead+sin(moveAngle)*playerSpeed-sin(handler.dir)*math.abs(forceHead)*centrifugalForce
         )
-        velocity = velocity * (1-fric)
+        velocity = velocity * (1-friction*math.pow(1.5, handler.depth))
 
         rot = rot + velocity
     end
-    if limits ~= nil then function events.tick()
+    if handler.limits ~= nil then function events.tick()
         if not handler.enabled then return end
-        if rot.x < limits[1] then rot.x = limits[1] velocity.x = 0 end
-        if rot.x > limits[2] then rot.x = limits[2] velocity.x = 0 end
-        if rot.y < limits[3] then rot.y = limits[3] velocity.y = 0 end
-        if rot.y > limits[4] then rot.y = limits[4] velocity.y = 0 end
-        if rot.z < limits[5] then rot.z = limits[5] velocity.z = 0 end
-        if rot.z > limits[6] then rot.z = limits[6] velocity.z = 0 end
+        if rot.x < handler.limits[1] then rot.x = handler.limits[1] velocity.x = 0 end
+        if rot.x > handler.limits[2] then rot.x = handler.limits[2] velocity.x = 0 end
+        if rot.y < handler.limits[3] then rot.y = handler.limits[3] velocity.y = 0 end
+        if rot.y > handler.limits[4] then rot.y = handler.limits[4] velocity.y = 0 end
+        if rot.z < handler.limits[5] then rot.z = handler.limits[5] velocity.z = 0 end
+        if rot.z > handler.limits[6] then rot.z = handler.limits[6] velocity.z = 0 end
     end end
     function events.render(delta)
         if not handler.enabled then return end
-
-        part:setOffsetRot(lerp(_rot, rot, delta))
+        handler.part:setOffsetRot(lerp(_rot, rot, delta))
     end
     return handler
 end
@@ -186,19 +236,49 @@ function SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
     local rot = vec(0,0,0)
     local velocity = vec(0,0,0)
     if depth == nil then depth = 0 end
-    local fric = friction*math.pow(1.5, depth)
     local handler = {
         ---@type SwingHandler
     }
     handler.enabled = true
-    ---@param enabled boolean
+    handler.part = part
+    handler.dir = dir
+    handler.limits = limits
+    handler.root = root
+    handler.depth = depth
     function handler:setEnabled(enabled)
         self.enabled = enabled
         if not self.enabled then
             rot = vec(0,0,0)
             _rot = rot
-            part:setOffsetRot(rot)
+            self.part:setOffsetRot(rot)
         end
+    end
+    function handler:getEnabled()
+        return self.enabled
+    end
+    function handler:setPart(part)
+        self.part = part
+    end
+    function handler:getPart()
+        return self.part
+    end
+    function handler:setDir(dir)
+        self.dir = dir
+    end
+    function handler:getDir()
+        return self.dir
+    end
+    function handler:setLimits(limits)
+        self.limits = limits
+    end
+    function handler:getLimits()
+        return self.limits
+    end
+    function handler:setRoot(root)
+        self.root = root
+    end
+    function handler:getRoot()
+        return self.root
     end
     function events.tick()
         if not handler.enabled then return end
@@ -206,35 +286,33 @@ function SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
         _rot = rot
 
         local grav
-        if root ~= nil then
-            grav = ((downBody - root:getOffsetRot()) - rot) * gravity
+        if handler.root ~= nil then
+            grav = ((downBody - handler.root:getOffsetRot()) - rot) * gravity
         else
             grav = (downBody - rot) * gravity
         end
 
         velocity = velocity + grav + vec(
-            sin(dir)*forceBody-cos(moveAngle)*playerSpeed+cos(dir)*math.abs(forceBody)*centrifugalForce,
+            sin(handler.dir)*forceBody-cos(moveAngle)*playerSpeed+cos(handler.dir)*math.abs(forceBody)*centrifugalForce,
             0,
-            cos(dir)*forceBody+sin(moveAngle)*playerSpeed-sin(dir)*math.abs(forceBody)*centrifugalForce
+            cos(handler.dir)*forceBody+sin(moveAngle)*playerSpeed-sin(handler.dir)*math.abs(forceBody)*centrifugalForce
         )
-        velocity = velocity * (1-fric)
+        velocity = velocity * (1-friction*math.pow(1.5, handler.depth))
 
         rot = rot + velocity
     end
-    if limits ~= nil then function events.tick()
+    if handler.limits ~= nil then function events.tick()
         if not handler.enabled then return end
-
-        if rot.x < limits[1] then rot.x = limits[1] velocity.x = 0 end
-        if rot.x > limits[2] then rot.x = limits[2] velocity.x = 0 end
-        if rot.y < limits[3] then rot.y = limits[3] velocity.y = 0 end
-        if rot.y > limits[4] then rot.y = limits[4] velocity.y = 0 end
-        if rot.z < limits[5] then rot.z = limits[5] velocity.z = 0 end
-        if rot.z > limits[6] then rot.z = limits[6] velocity.z = 0 end
+        if rot.x < handler.limits[1] then rot.x = handler.limits[1] velocity.x = 0 end
+        if rot.x > handler.limits[2] then rot.x = handler.limits[2] velocity.x = 0 end
+        if rot.y < handler.limits[3] then rot.y = handler.limits[3] velocity.y = 0 end
+        if rot.y > handler.limits[4] then rot.y = handler.limits[4] velocity.y = 0 end
+        if rot.z < handler.limits[5] then rot.z = handler.limits[5] velocity.z = 0 end
+        if rot.z > handler.limits[6] then rot.z = handler.limits[6] velocity.z = 0 end
     end end
     function events.render(delta)
         if not handler.enabled then return end
-
-        part:setOffsetRot(lerp(_rot, rot, delta))
+        handler.part:setOffsetRot(lerp(_rot, rot, delta))
     end
     return handler
 end
