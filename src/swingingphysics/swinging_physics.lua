@@ -229,7 +229,6 @@ end
 ---@param root ModelPart|nil Required if it is part of a chain. Note that the first chain element does not need this root parameter, and does also not need the depth parameter. Only following chain links need it.
 ---@param depth number|nil An integer that should increase by 1 for each consecutive chain link after the root. The root itself doesnt need this parameter. This increases the friction which makes it look more realistic. Recommended to play around with it a bit to find values you like, also dont make it too high otherwise it will almost look stiff. mostly good values are between 1 and 5
 ---@return SwingHandler
----@return SwingHandler
 function SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
     assert(part, "Model Part does not exist!")
     local _rot = vec(0,0,0)
