@@ -135,7 +135,7 @@ function SwingHandler:getDepth()end
 ---@param dir number Angle in degree, where the part is located relative to the center of the head. Imagine a stick pointing out in that direction with the model part hanging from its end. 0 means forward, 45 means diagonally forward and left, 90 means straight left and so on
 ---@param limits table|nil Limits the rotation of the part to make it appear like its colliding with something. Format: {xLow, xHigh, yLow, yHigh, zLow, zHigh} (optional)
 ---@param root ModelPart|nil Required if it is part of a chain. Note that the first chain element does not need this root parameter, and does also not need the depth parameter. Only following chain links need it.
----@param depth number|nil An integer that should increase by 1 for each consecutive chain link after the root. The root itself doesnt need this parameter. This increases the friction which makes it look more realistic.
+---@param depth number|nil An integer that should increase by 1 for each consecutive chain link after the root. The root itself doesnt need this parameter. This increases the friction which makes it look more realistic. Recommended to play around with it a bit to find values you like, also dont make it too high otherwise it will almost look stiff. mostly good values are between 1 and 5
 ---@return SwingHandler
 function SwingingPhysics.swingOnHead(part, dir, limits, root, depth)
     assert(part, "Model Part does not exist!")
@@ -227,7 +227,8 @@ end
 ---@param dir number Angle in degree, where the part is located relative to the center of the head. Imagine a stick pointing out in that direction with the model part hanging from its end. 0 means forward, 45 means diagonally forward and left, 90 means straight left and so on
 ---@param limits table|nil Limits the rotation of the part to make it appear like its colliding with something. Format: {xLow, xHigh, yLow, yHigh, zLow, zHigh} (optional)
 ---@param root ModelPart|nil Required if it is part of a chain. Note that the first chain element does not need this root parameter, and does also not need the depth parameter. Only following chain links need it.
----@param depth number|nil An integer that should increase by 1 for each consecutive chain link after the root. The root itself doesnt need this parameter. This increases the friction which makes it look more realistic.
+---@param depth number|nil An integer that should increase by 1 for each consecutive chain link after the root. The root itself doesnt need this parameter. This increases the friction which makes it look more realistic. Recommended to play around with it a bit to find values you like, also dont make it too high otherwise it will almost look stiff. mostly good values are between 1 and 5
+---@return SwingHandler
 ---@return SwingHandler
 function SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
     assert(part, "Model Part does not exist!")
