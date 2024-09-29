@@ -16,13 +16,21 @@ function Membrane:define(membrane,positions)
             vs[#vs+1] = v
         end
     end
-    function events.POST_RENDER()
-        if not membrane:getVisible() then return end
+    membrane:setPreRender(function()
+        local worldToPartMat = membrane:partToWorldMatrix():invert()
+        local p1 = positions[1]:partToWorldMatrix():apply()
+        local p3 = positions[3]:partToWorldMatrix():apply()
+        local n1 = (positions[2]:partToWorldMatrix():apply()-p1):cross(p3-p1)
+        local n2 = (p3-p1):cross(positions[4]:partToWorldMatrix():apply()-p1)
+        local worldNormal = (n1+n2)/2
+        local normal = (worldToPartMat * worldNormal.xyz_).xyz:normalize()
         for i, p in ipairs(positions) do
-            local n = membrane:partToWorldMatrix():invert():apply(p:partToWorldMatrix():apply())
-            vs[i]:setPos(n)
-            vs[#vs+1-i]:setPos(n)
+            local pos = worldToPartMat:apply(p:partToWorldMatrix():apply())
+            vs[i]:setPos(pos)
+            vs[i]:setNormal(normal)
+            vs[#vs+1-i]:setPos(pos)
+            vs[#vs+1-i]:setNormal(normal*-1)
         end
-    end
+    end)
 end
 return Membrane
