@@ -39,8 +39,8 @@ end
 ---@field rotationOverTime Vector3|number|nil Change of rotation every tick
 ---@field billboard boolean|nil Makes the particle always face the camera
 ---@field emissive boolean|nil Makes the particle emissive, only works for mesh. Alternative for sprite is to make a flat cube with the sprite on it as a mesh particle.
----@field ticker function|nil Function called each tick. To keep default behavior, call `Confetti.defaultTicker(particle)` before your own code.
----@field renderer function|nil Function called each frame. To keep default behavior, call `Confetti.defaultRenderer(particle, delta, context, matrix)` before your own code.
+---@field ticker fun(particle: Confetto)|nil Function called each tick. To keep default behavior, call `Confetti.defaultTicker(particle)` before your own code.
+---@field renderer fun(particle: Confetto, delta: number, context: Event.Render.context, matrix: Matrix4)|nil Function called each frame. To keep default behavior, call `Confetti.defaultRenderer(particle, delta, context, matrix)` before your own code.
 local ConfettoOptions = {}
 ConfettoOptions.__index = ConfettoOptions
 
@@ -88,11 +88,6 @@ function Confetto:new(mesh, task, pos, vel, bounds, pivot, options)
         pivot=pivot,
         options=options
     }, Confetto)
-end
-
-function Confetto:setUVOffset(u,v)
-    self.u = u
-    self.v = v
 end
 
 --- Register a Mesh Particle

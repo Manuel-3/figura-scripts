@@ -1,3 +1,5 @@
+vanilla_model.ALL:setVisible(false)
+
 -- EXAMPLE SCRIPT --
 -- If you want to view an example for longer time, change the example number below, and the time to some big value
 -- By the way, all newParticle lines are called in a tick event!
