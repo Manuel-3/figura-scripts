@@ -38,7 +38,7 @@ end
 ---@field rotation Vector3|number|nil Initial rotation when spawning
 ---@field rotationOverTime Vector3|number|nil Change of rotation every tick
 ---@field billboard boolean|nil Makes the particle always face the camera
----@field emissive boolean|nil Makes the particle emissive, only works for mesh. Alternative for sprite is to make a flat cube with the sprite on it as a mesh particle.
+---@field emissive boolean|nil Makes the particle emissive.
 ---@field ticker fun(particle: Confetto)|nil Function called each tick. To keep default behavior, call `Confetti.defaultTicker(particle)` before your own code.
 ---@field renderer fun(particle: Confetto, delta: number, context: Event.Render.context, matrix: Matrix4)|nil Function called each frame. To keep default behavior, call `Confetti.defaultRenderer(particle, delta, context, matrix)` before your own code.
 local ConfettoOptions = {}
@@ -61,6 +61,7 @@ local DefaultConfettoOptions = {
 ---@class Confetto
 ---@field mesh ModelPart The model part
 ---@field task SpriteTask|nil The sprite task if it's a sprite particle
+---@field emissiveTask SpriteTask|nil Secondary sprite task if it's emissive
 ---@field position Vector3 Current position in world coordinates
 ---@field _position Vector3 Last tick position
 ---@field lifetime number Remaining lifetime in ticks
@@ -72,10 +73,11 @@ local DefaultConfettoOptions = {
 local Confetto = {}
 Confetto.__index = Confetto
 
-function Confetto:new(mesh, task, pos, vel, bounds, pivot, options)
+function Confetto:new(mesh, task, emissiveTask, pos, vel, bounds, pivot, options)
     return setmetatable({
         mesh=mesh,
         task=task,
+        emissiveTask=emissiveTask,
         position=pos,
         _position=pos,
         velocity=vel,
@@ -137,26 +139,32 @@ function Confetti.newParticle(name, pos, vel, options)
     if type(options.acceleration) == "number" then
         options.acceleration = vel:normalized() * options.acceleration
     end
-    local meshInstance, task
+    local meshInstance, task, emissiveTask
     if Particles[name].mesh ~= nil then
         meshInstance = modelinstances:newPart("_")
         Particles[name].mesh:copy("meshholder"):moveTo(meshInstance):setParentType(options.billboard and "CAMERA" or "NONE"):setVisible(true)
     else
         meshInstance = modelinstances:newPart("_")
-        task = meshInstance:newPart("taskholder")
+        local holder = meshInstance:newPart("taskholder")
             :setParentType(options.billboard and "CAMERA" or "NONE")
-            :newSprite("_")
+        local function makeTask(part)
+            return part:newSprite("_")
                 :setPos(Particles[name].pivot.xy_)
                 :setTexture(Particles[name].sprite)
                 :setDimensions(Particles[name].sprite:getDimensions())
                 :setUVPixels(Particles[name].bounds.x,Particles[name].bounds.y)
                 :setRegion(Particles[name].bounds.z+1-Particles[name].bounds.x,Particles[name].bounds.w+1-Particles[name].bounds.y)
                 :setSize(Particles[name].bounds.z+1-Particles[name].bounds.x,Particles[name].bounds.w+1-Particles[name].bounds.y)
+        end
+        task = makeTask(holder:newPart("_"))
+        if options.emissive then
+            emissiveTask = makeTask(holder:newPart("_")):setRenderType("EMISSIVE")
+        end
     end
     if options.emissive then
         meshInstance:setSecondaryTexture("PRIMARY")
     end
-    local particle = Confetto:new(meshInstance, task, pos, vel, Particles[name].bounds, Particles[name].pivot, options)
+    local particle = Confetto:new(meshInstance, task, emissiveTask, pos, vel, Particles[name].bounds, Particles[name].pivot, options)
     table.insert(Instances, particle)
     return particle
 end
