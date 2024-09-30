@@ -1,10 +1,10 @@
-vanilla_model.ALL:setVisible(false)
-
 -- EXAMPLE SCRIPT --
 -- If you want to view an example for longer time, change the example number below, and the time to some big value
 -- By the way, all newParticle lines are called in a tick event!
 local example = 1
 local time_each_example = 100
+
+vanilla_model.ALL:setVisible(false)
 
 -- Example code begins here --
 local confetti = require("confetti")
@@ -90,16 +90,19 @@ function example3()
 end
 
 function example4()
-    -- Example 4 sparks reversing and rotating wildly
+    -- Example 4 sparks slowing down and getting smaller at the end
     confetti.newParticle(
         "spark",
         player:getPos()+vec(0,math.random(),0),
-        vec(0.25-math.random()*0.5,0.25-math.random()*0.5,0.25-math.random()*0.5),
+        vec((math.random()-0.5)*0.3,math.random()*0.3,(math.random()-0.5)*0.3),
         {
-            rotationOverTime=30,
-            acceleration=-0.02,
-            lifetime=30,
-            emissive=true
+            emissive=true,
+            friction=0.83,
+            ticker=function(particle)
+                confetti.defaultTicker(particle)
+                -- some fancy math stuff to only scale it near the end of lifetime
+                particle.scale = math.clamp(math.map(particle.lifetime, particle.options.lifetime, 2, 4, 0), 0, 1)
+            end
         }
     )
 end
@@ -137,19 +140,16 @@ function example7()
 end
 
 function example8()
-    -- Example 8 sparks slowing down and getting smaller at the end
+    -- Example 8 sparks reversing and rotating wildly
     confetti.newParticle(
         "spark",
         player:getPos()+vec(0,math.random(),0),
-        vec((math.random()-0.5)*0.3,math.random()*0.3,(math.random()-0.5)*0.3),
+        vec(0.25-math.random()*0.5,0.25-math.random()*0.5,0.25-math.random()*0.5),
         {
-            emissive=true,
-            friction=0.83,
-            ticker=function(particle)
-                confetti.defaultTicker(particle)
-                -- some fancy math stuff to only scale it near the end of lifetime
-                particle.scale = math.clamp(math.map(particle.lifetime, particle.options.lifetime, 2, 4, 0), 0, 1)
-            end
+            rotationOverTime=30,
+            acceleration=-0.02,
+            lifetime=30,
+            emissive=true
         }
     )
 end
