@@ -6,6 +6,7 @@ local Membrane = {}
 function Membrane:define(membrane,positions)
     assert(membrane, "The cube you provided doesn't exist.")
     assert(membrane:getType()~="GROUP","Can not use a group as a membrane.")
+    membrane:moveTo(models)
     for i=1,4 do
         assert(positions[i],"The group at position "..i.." doesn't exist.")
     end
@@ -16,7 +17,7 @@ function Membrane:define(membrane,positions)
             vs[#vs+1] = v
         end
     end
-    membrane:setPreRender(function()
+    membrane:setPostRender(function()
         local worldToPartMat = membrane:partToWorldMatrix():invert()
         local p1 = positions[1]:partToWorldMatrix():apply()
         local p3 = positions[3]:partToWorldMatrix():apply()
