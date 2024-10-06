@@ -25,13 +25,13 @@ local commandsEnabledUUID = tostring(client.generateUUID())
 host:sendChatCommand(commandsEnabledUUID)
 events.CHAT_RECEIVE_MESSAGE:register(function (message)
     if not message then return message end
-    if commandsEnabledTimer > 0 and(message:find("nknown or incomplete command") or message:find(commandsEnabledUUID)) then
+    if commandsEnabledTimer > 0 and(message:match("nknown.*command") or message:find(commandsEnabledUUID)) then
         commandsEnabled = true
         return false
     end
     if message:find('figuracombat_') then
-        if message:find("nknown scoreboard objective") then
-            logJson(toJson({text="This server does not have the Figura Combat datapack installed.",color="red"}))
+        if message:match("nknown") then
+            error("This server does not have the Figura Combat datapack installed.")
         end
         return false
     end
