@@ -55,18 +55,11 @@ function ticker(particle)
     particle.position = math.lerp(particle.position, target, 0.3)
 end
 
--- limit attacks to once per tick
-local hasAttackedThisTick = false
 function performAttack(entity)
-    if not hasAttackedThisTick then
-        hasAttackedThisTick = true
-        canAttack = true
-        createImpactEffect(entity:getPos())
-        Combat.attack(attackId, entity, attackDamage)
-    end
-end
-function events.tick()
-    hasAttackedThisTick = false
+    canAttack = true
+    createImpactEffect(entity:getPos())
+    log("calling")
+    Combat.attack(attackId, entity, attackDamage)
 end
 
 function createImpactEffect(pos)

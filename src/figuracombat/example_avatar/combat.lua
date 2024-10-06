@@ -59,6 +59,12 @@ events.CHAT_SEND_MESSAGE:register(function (message)
     return message
 end)
 
+-- limit attacks to once per tick
+local hasAttackedThisTick = false
+function events.tick()
+    hasAttackedThisTick = false
+end
+
 ---Attack an entity with a given attackId and damage amount.
 ---**Important!** You can only call this at max once per tick!
 ---Ideally less, to let the server update properly. Best practice to keep track of your current cooldown, and only call it when its over.
@@ -74,6 +80,9 @@ function Combat.attack(attackId, entity, damage)
     assert(type(entity)~="nil" and (entity.getUUID or type(entity[1])=="number"), "Invalid argument 2, for entity.")
     assert(type(damage)=="number", "Invalid argument 3, for damage.")
     local uuid = type(entity[1])=="number" and entity or {client.uuidToIntArray(entity:getUUID())}
+    if hasAttackedThisTick then return end
+    hasAttackedThisTick = true
+    log("performing")
     host:sendChatCommand("/trigger figuracombat_uuid_1 set "..tostring(uuid[1]))
     host:sendChatCommand("/trigger figuracombat_uuid_2 set "..tostring(uuid[2]))
     host:sendChatCommand("/trigger figuracombat_uuid_3 set "..tostring(uuid[3]))
