@@ -140,7 +140,7 @@ end
 
 ---Display attack radius preview in world
 ---You can also use the /preview command
----@param radius any
+---@param radius number
 function Combat.previewRadius(radius)
     preview = radius
 end
