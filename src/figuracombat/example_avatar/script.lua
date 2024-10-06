@@ -58,7 +58,6 @@ end
 function performAttack(entity)
     canAttack = true
     createImpactEffect(entity:getPos())
-    log("calling")
     Combat.attack(attackId, entity, attackDamage)
 end
 

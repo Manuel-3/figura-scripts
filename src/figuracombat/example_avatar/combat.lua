@@ -82,7 +82,6 @@ function Combat.attack(attackId, entity, damage)
     local uuid = type(entity[1])=="number" and entity or {client.uuidToIntArray(entity:getUUID())}
     if hasAttackedThisTick then return end
     hasAttackedThisTick = true
-    log("performing")
     host:sendChatCommand("/trigger figuracombat_uuid_1 set "..tostring(uuid[1]))
     host:sendChatCommand("/trigger figuracombat_uuid_2 set "..tostring(uuid[2]))
     host:sendChatCommand("/trigger figuracombat_uuid_3 set "..tostring(uuid[3]))
