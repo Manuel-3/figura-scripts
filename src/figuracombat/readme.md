@@ -7,8 +7,15 @@ Library to create custom attacks in your Figura avatar.
 ## Installation
 1. [Download the datapack](https://github.com/Manuel-3/figura-scripts/blob/main/src/figuracombat/figuracombat_datapack.zip) and put it in your world/servers datapack folder.
 2. Open the `data/figuracombat/functions/_config.mcfunction` file with a text editor to configure the available attacks.
-3. [Download the library](https://github.com/Manuel-3/figura-scripts/blob/main/src/figuracombat/combat.lua) `combat.lua` file and put it inside your own avatar.
-4. Custom code your own attack animations (advanced) and call the attack function to attack an entity.
+3. In your servers configuration put `/trigger` into the `spam-exclusions` to not get kicked for spamming!
+Example for `spigot.yml`
+```yaml
+commands:
+  spam-exclusions:
+  - /trigger
+```
+4. [Download the library](https://github.com/Manuel-3/figura-scripts/blob/main/src/figuracombat/combat.lua) `combat.lua` file and put it inside your own avatar.
+5. Custom code your own attack animations (advanced) and call the attack function to attack an entity.
 ## Example
 [Full Example Avatar Download](https://github.com/Manuel-3/figura-scripts/blob/main/src/figuracombat/example_avatar.zip)
 
