@@ -115,7 +115,7 @@ You can also use the /preview command
 
 ```lua
 Combat.previewRadius(radius)
-Combat.stopPreview()
+Combat.previewRadius(5)
 ```
 
 ### Combat.stopPreview
