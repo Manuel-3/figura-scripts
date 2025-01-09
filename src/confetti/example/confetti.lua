@@ -42,7 +42,6 @@ end
 ---@field ticker fun(particle: Confetto)|nil Function called each tick. To keep default behavior, call `Confetti.defaultTicker(particle)` before your own code.
 ---@field renderer fun(particle: Confetto, delta: number, context: Event.Render.context, matrix: Matrix4)|nil Function called each frame. To keep default behavior, call `Confetti.defaultRenderer(particle, delta, context, matrix)` before your own code.
 local ConfettoOptions = {}
-ConfettoOptions.__index = ConfettoOptions
 
 local DefaultConfettoOptions = {
     lifetime = DEFAULT_LIFETIME,
@@ -64,6 +63,7 @@ local DefaultConfettoOptions = {
 ---@field emissiveTask SpriteTask|nil Secondary sprite task if it's emissive
 ---@field position Vector3 Current position in world coordinates
 ---@field _position Vector3 Last tick position
+---@field velocity Vector3 The particles velocity
 ---@field lifetime number Remaining lifetime in ticks
 ---@field scale Vector3|number Current scale
 ---@field _scale Vector3|number Last tick scale
