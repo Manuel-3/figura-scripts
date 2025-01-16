@@ -15,7 +15,7 @@ function events.WORLD_RENDER()
     local t = getT()
     for key,timer in pairs(tmrs) do
         if timer.p()or(timer.t and t >= timer.t)then
-            timer.n(t-timer.t)
+            timer.n(timer.t and t-timer.t)
             tmrs[key]=nil
         end
     end
