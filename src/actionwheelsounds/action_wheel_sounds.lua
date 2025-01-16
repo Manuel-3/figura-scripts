@@ -70,8 +70,8 @@ if host:isHost() then
         scroll = scroll + ({...})[1]
         local p1 = math.pow(2,(scroll%24 - 12) / 12)
         local p2 = math.pow(2,((scroll+12) % 24 - 12) / 12)
-        local v1 = math.abs(math.sin(scroll/7.64))
-        local v2 = math.abs(math.sin(((scroll+12)%24)/7.64))
+        local v1 = (12-math.abs(-12+scroll%24))/12
+        local v2 = (12-math.abs(-12+((scroll+12)%24)))/12
         sounds:playSound(action_wheel_sounds[key][1], player:getPos(), v1, p1)
         sounds:playSound(action_wheel_sounds[key][1], player:getPos(), v2, p2)
         return value(...)
