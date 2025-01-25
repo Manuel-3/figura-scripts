@@ -7,26 +7,27 @@ local Particles = {}
 local Instances = {}
 local modelinstances = models:newPart("confetti"..client.intUUIDToString(client.generateUUID())):setParentType("World"):newPart("Instances")
 local DEFAULT_LIFETIME = 20
+local math_lerp = math.lerp
 
 ---Default ticker
 ---@param instance Confetto
 function Confetti.defaultTicker(instance)
+    local opts = instance.options
     instance._position = instance.position
     instance._rotation = instance.rotation
     instance._scale = instance.scale
-    instance.velocity = instance.velocity + instance.options.acceleration
-    instance.velocity = instance.velocity * instance.options.friction
+    instance.velocity = (instance.velocity + opts.acceleration) * opts.friction
     instance.position = instance.position + instance.velocity
-    instance.scale = instance.scale + instance.options.scaleOverTime
-    instance.rotation = instance.rotation + instance.options.rotationOverTime
+    instance.scale = instance.scale + opts.scaleOverTime
+    instance.rotation = instance.rotation + opts.rotationOverTime
 end
 
 ---Default renderer
 ---@param instance Confetto
 function Confetti.defaultRenderer(instance, delta, context, matrix)
-    instance.mesh:setPos((math.lerp(instance._position,instance.position,delta))*16)
-    instance.mesh:setRot(math.lerp(instance._rotation,instance.rotation,delta))
-    instance.mesh:setScale(math.lerp(instance._scale,instance.scale,delta))
+    instance.mesh:setPos((math_lerp(instance._position,instance.position,delta))*16)
+    instance.mesh:setRot(math_lerp(instance._rotation,instance.rotation,delta))
+    instance.mesh:setScale(math_lerp(instance._scale,instance.scale,delta))
 end
 
 ---@class ConfettoOptions
