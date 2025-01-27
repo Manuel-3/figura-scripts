@@ -25,6 +25,7 @@ end
 ---Default renderer
 ---@param instance Confetto
 function Confetti.defaultRenderer(instance, delta, context, matrix)
+    if context == "PAPERDOLL" then return end
     instance.mesh:setPos((math_lerp(instance._position,instance.position,delta))*16)
     instance.mesh:setRot(math_lerp(instance._rotation,instance.rotation,delta))
     instance.mesh:setScale(math_lerp(instance._scale,instance.scale,delta))
