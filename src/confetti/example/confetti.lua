@@ -40,8 +40,8 @@ end
 ---@field rotationOverTime Vector3|number|nil Change of rotation every tick
 ---@field billboard boolean|nil Makes the particle always face the camera
 ---@field emissive boolean|nil Makes the particle emissive.
----@field ticker fun(particle: Confetto)|nil Function called each tick. To keep default behavior, call `Confetti.defaultTicker(particle)` before your own code.
----@field renderer fun(particle: Confetto, delta: number, context: Event.Render.context, matrix: Matrix4)|nil Function called each frame. To keep default behavior, call `Confetti.defaultRenderer(particle, delta, context, matrix)` before your own code.
+---@field ticker fun(particle: Confetto)|nil Function called each tick. Will overwrite the default behavior which calculates position, velocity, rotation and scale. To keep default behavior, call `Confetti.defaultTicker(particle)` before your own code.
+---@field renderer fun(particle: Confetto, delta: number, context: Event.Render.context, matrix: Matrix4)|nil Function called each frame. Will overwrite the default behavior which smoothes the pos,rot,scale if it was calculated correctly by the ticker. To keep default behavior, call `Confetti.defaultRenderer(particle, delta, context, matrix)` before your own code.
 local ConfettoOptions = {}
 
 local DefaultConfettoOptions = {
