@@ -40,7 +40,7 @@ function example1()
                 end
                 -- overwrite position with our own calculation.
                 -- using _position (which is the position from previous tick) because
-                -- the defaultTicker() already modified the current position,
+                -- the defaultTicker already modified the current position,
                 -- so we want to overwrite that with the previous tick value as a base
                 particle.position = particle._position + particle.velocity
             end
@@ -71,8 +71,9 @@ function example3()
             frame=0, -- custom variable "frame" added into options
             billboard=true,
             ticker=function(particle)
-                -- we dont need the default ticker in this case, but in general always call it
-                -- check out the code to see what it does to determine if you need it
+                -- we dont need the default ticker in this case, because this particle isn't supposed to move
+                -- but in general you should always always call it with confetti.defaultTicker(particle)
+                -- check out the code to see what it does to determine if you need it (it just updates the pos,rot,scale)
 
                 -- set uv to original bounds plus a frame offset
                 particle.task:setUVPixels(particle.bounds.x+particle.options.frame*5, particle.bounds.y)
