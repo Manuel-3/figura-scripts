@@ -118,7 +118,7 @@ function Confetti.registerSprite(name, sprite, bounds, lifetime, pivot)
         logTable(textures:getTextures())
         error("Texture does not exist. Use the correct name shown in the list above. It may need a model name before the texture name separated by a dot.")
     end
-    Particles[name] = {sprite=sprite,bounds=bounds,lifetime=lifetime or DEFAULT_LIFETIME,pivot=pivot or vec((bounds.y-bounds.x)/2,(bounds.w-bounds.z)/2)}
+    Particles[name] = {sprite=sprite,bounds=bounds,lifetime=lifetime or DEFAULT_LIFETIME,pivot=pivot or vec((bounds.z-bounds.x)/2,(bounds.w-bounds.y)/2)}
 end
 
 --- Spawn a registered custom particle
