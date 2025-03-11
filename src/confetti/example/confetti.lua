@@ -25,6 +25,7 @@ end
 ---Default renderer
 ---@param instance Confetto
 function Confetti.defaultRenderer(instance, delta, context, matrix)
+    if context == "PAPERDOLL" then return end
     instance.mesh:setPos((math_lerp(instance._position,instance.position,delta))*16)
     instance.mesh:setRot(math_lerp(instance._rotation,instance.rotation,delta))
     instance.mesh:setScale(math_lerp(instance._scale,instance.scale,delta))
@@ -117,7 +118,7 @@ function Confetti.registerSprite(name, sprite, bounds, lifetime, pivot)
         logTable(textures:getTextures())
         error("Texture does not exist. Use the correct name shown in the list above. It may need a model name before the texture name separated by a dot.")
     end
-    Particles[name] = {sprite=sprite,bounds=bounds,lifetime=lifetime or DEFAULT_LIFETIME,pivot=pivot or vec((bounds.y-bounds.x)/2,(bounds.w-bounds.z)/2)}
+    Particles[name] = {sprite=sprite,bounds=bounds,lifetime=lifetime or DEFAULT_LIFETIME,pivot=pivot or vec((bounds.z-bounds.x)/2,(bounds.w-bounds.y)/2)}
 end
 
 --- Spawn a registered custom particle
