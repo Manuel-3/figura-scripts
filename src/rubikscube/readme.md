@@ -32,4 +32,6 @@ cameraSensitivity
 previewRightClickTurnDir
 smoothPreview
 previewAmountDegrees
-```To customize your cube, simply open the texture and change colors. If you want more detail, first scale the texture up by a natural factor like 2x or 3x and then draw on it, no need to mess with any UV values.
+```
+
+To customize your cube, simply open the texture and change colors. If you want more detail, first scale the texture up by a natural factor like 2x or 3x and then draw on it, no need to mess with any UV values.
