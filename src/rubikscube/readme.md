@@ -13,7 +13,10 @@ local rubiks = require("rubikscube")
 -- in your action that changes to the rubiks page, put this:
 rubiks.goBackPage = "page name"
 action_wheel:setPage(rubiks.page)
-```Settings you can change in the script, or update dynamically:
+```
+
+Settings you can change in the script, or update dynamically:
+
 ```lua
 --example
 rubiks.settings.scrambleDelay = 4
