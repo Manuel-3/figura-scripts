@@ -23,20 +23,29 @@ end
 ---@param thickness number|nil Thickness of the outline
 ---@param color Vector3|nil Outline color
 ---@param emissive boolean If the outline should glow
----@return ModelPart #The outline modelpart
+---@return ModelPart[] #List of outline model parts
 local function createOutline(cube, thickness, color, emissive)
-    assert(cube:getType() ~= "GROUP", "Blockbench Groups are not supported for outlines! Use a Cube or Mesh instead!")
-    if not thickness then thickness = 0.1 end
-    if not color then color = vec(0,0,0) end
-    local outline = cube:copy(cube:getName().."_outline")
-    cube:getParent():addChild(outline)
-    outline:setPrimaryTexture("CUSTOM",texture)
-    if emissive then outline:setSecondaryTexture("CUSTOM", texture) end
-    outline:setColor(color)
-    outline:setPrimaryRenderType("CUTOUT_CULL")
-    outline:setScale(-1-thickness)
-    outline:setPivot(centerPivot(outline))
-    return outline
+    local outlines = {}
+    if cube:getType() == "GROUP" then
+        for _, child in pairs(cube:getChildren()) do
+            for _, outline in ipairs(createOutline(child, thickness, color, emissive)) do
+                table.insert(outlines, outline)
+            end
+        end
+    else
+        if not thickness then thickness = 0.1 end
+        if not color then color = vec(0,0,0) end
+        local outline = cube:copy(cube:getName().."_outline")
+        cube:getParent():addChild(outline)
+        outline:setPrimaryTexture("CUSTOM",texture)
+        if emissive then outline:setSecondaryTexture("CUSTOM", texture) end
+        outline:setColor(color)
+        outline:setPrimaryRenderType("CUTOUT_CULL")
+        outline:setScale(-1-thickness)
+        outline:setPivot(centerPivot(outline))
+        table.insert(outlines, outline)
+    end
+    return outlines
 end
 
 return {createOutline = createOutline}

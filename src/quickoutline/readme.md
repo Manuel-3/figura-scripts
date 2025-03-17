@@ -9,8 +9,8 @@ Example Usage:
 local outline = require("quickoutline")
 
 local head_outline = outline.createOutline(models.model.Head.cube, 0.2, vec(0,0,0), false)
---                                         ^cube          thickness^    ^color      ^emissive
+--                                         ^cube/group    thickness^    ^color      ^emissive
 ```
-Note that it must be a cube! Groups do not work here, you must put a new line for each cube individually!
+If you select a group it will make outlines for all cubes within it.
 
 ![Quick Outline Logo](./images/image.png)
