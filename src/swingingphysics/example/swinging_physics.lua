@@ -135,9 +135,10 @@ function SwingHandler:getDepth()end
 ---@param dir number Angle in degree, where the part is located relative to the center of the head. Imagine a stick pointing out in that direction with the model part hanging from its end. 0 means forward, 45 means diagonally forward and left, 90 means straight left and so on
 ---@param limits table|nil Limits the rotation of the part to make it appear like its colliding with something. Format: {xLow, xHigh, yLow, yHigh, zLow, zHigh} (optional)
 ---@param root ModelPart|nil Required if it is part of a chain. Note that the first chain element does not need this root parameter, and does also not need the depth parameter. Only following chain links need it.
----@param depth number|nil An integer that should increase by 1 for each consecutive chain link after the root. The root itself doesnt need this parameter. This increases the friction which makes it look more realistic.
+---@param depth number|nil An integer that should increase by 1 for each consecutive chain link after the root. The root itself doesnt need this parameter. This increases the friction which makes it look more realistic. Recommended to play around with it a bit to find values you like, also dont make it too high otherwise it will almost look stiff. mostly good values are between 1 and 5
+---@param globalLimits boolean If true, will negate the vanilla head rotation to keep the limits in global space instead of local to the head. This could help prevent clipping through other body parts.
 ---@return SwingHandler
-function SwingingPhysics.swingOnHead(part, dir, limits, root, depth)
+function SwingingPhysics.swingOnHead(part, dir, limits, root, depth, globalLimits)
     assert(part, "Model Part does not exist!")
     local _rot = vec(0,0,0)
     local rot = vec(0,0,0)
@@ -209,12 +210,14 @@ function SwingingPhysics.swingOnHead(part, dir, limits, root, depth)
         rot = rot + velocity
 
         if not handler.limits then return end
-        if rot.x < handler.limits[1] then rot.x = handler.limits[1] velocity.x = 0 end
-        if rot.x > handler.limits[2] then rot.x = handler.limits[2] velocity.x = 0 end
-        if rot.y < handler.limits[3] then rot.y = handler.limits[3] velocity.y = 0 end
-        if rot.y > handler.limits[4] then rot.y = handler.limits[4] velocity.y = 0 end
-        if rot.z < handler.limits[5] then rot.z = handler.limits[5] velocity.z = 0 end
-        if rot.z > handler.limits[6] then rot.z = handler.limits[6] velocity.z = 0 end
+        local limitoffset = vanilla_model.HEAD:getOriginRot()
+        if not globalLimits then limitoffset = vec(0,0,0) end
+        if rot.x < handler.limits[1]-limitoffset.x then rot.x = handler.limits[1]-limitoffset.x velocity.x = -velocity.x/2 end
+        if rot.x > handler.limits[2]-limitoffset.x then rot.x = handler.limits[2]-limitoffset.x velocity.x = -velocity.x/2 end
+        if rot.y < handler.limits[3]-limitoffset.y then rot.y = handler.limits[3]-limitoffset.y velocity.y = -velocity.y/2 end
+        if rot.y > handler.limits[4]-limitoffset.y then rot.y = handler.limits[4]-limitoffset.y velocity.y = -velocity.y/2 end
+        if rot.z < handler.limits[5]-limitoffset.z then rot.z = handler.limits[5]-limitoffset.z velocity.z = -velocity.z/2 end
+        if rot.z > handler.limits[6]-limitoffset.z then rot.z = handler.limits[6]-limitoffset.z velocity.z = -velocity.z/2 end
     end
     function events.render(delta)
         if not handler.enabled then return end
@@ -227,9 +230,10 @@ end
 ---@param dir number Angle in degree, where the part is located relative to the center of the head. Imagine a stick pointing out in that direction with the model part hanging from its end. 0 means forward, 45 means diagonally forward and left, 90 means straight left and so on
 ---@param limits table|nil Limits the rotation of the part to make it appear like its colliding with something. Format: {xLow, xHigh, yLow, yHigh, zLow, zHigh} (optional)
 ---@param root ModelPart|nil Required if it is part of a chain. Note that the first chain element does not need this root parameter, and does also not need the depth parameter. Only following chain links need it.
----@param depth number|nil An integer that should increase by 1 for each consecutive chain link after the root. The root itself doesnt need this parameter. This increases the friction which makes it look more realistic.
+---@param depth number|nil An integer that should increase by 1 for each consecutive chain link after the root. The root itself doesnt need this parameter. This increases the friction which makes it look more realistic. Recommended to play around with it a bit to find values you like, also dont make it too high otherwise it will almost look stiff. mostly good values are between 1 and 5
+---@param globalLimits boolean If true, will negate the vanilla body rotation to keep the limits in global space instead of local to the body. This could help prevent clipping through other body parts.
 ---@return SwingHandler
-function SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
+function SwingingPhysics.swingOnBody(part, dir, limits, root, depth, globalLimits)
     assert(part, "Model Part does not exist!")
     local _rot = vec(0,0,0)
     local rot = vec(0,0,0)
@@ -301,12 +305,14 @@ function SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
         rot = rot + velocity
 
         if not handler.limits then return end
-        if rot.x < handler.limits[1] then rot.x = handler.limits[1] velocity.x = 0 end
-        if rot.x > handler.limits[2] then rot.x = handler.limits[2] velocity.x = 0 end
-        if rot.y < handler.limits[3] then rot.y = handler.limits[3] velocity.y = 0 end
-        if rot.y > handler.limits[4] then rot.y = handler.limits[4] velocity.y = 0 end
-        if rot.z < handler.limits[5] then rot.z = handler.limits[5] velocity.z = 0 end
-        if rot.z > handler.limits[6] then rot.z = handler.limits[6] velocity.z = 0 end
+        local limitoffset = vanilla_model.BODY:getOriginRot()
+        if not globalLimits then limitoffset = vec(0,0,0) end
+        if rot.x < handler.limits[1]-limitoffset.x then rot.x = handler.limits[1]-limitoffset.x velocity.x = -velocity.x/2 end
+        if rot.x > handler.limits[2]-limitoffset.x then rot.x = handler.limits[2]-limitoffset.x velocity.x = -velocity.x/2 end
+        if rot.y < handler.limits[3]-limitoffset.y then rot.y = handler.limits[3]-limitoffset.y velocity.y = -velocity.y/2 end
+        if rot.y > handler.limits[4]-limitoffset.y then rot.y = handler.limits[4]-limitoffset.y velocity.y = -velocity.y/2 end
+        if rot.z < handler.limits[5]-limitoffset.z then rot.z = handler.limits[5]-limitoffset.z velocity.z = -velocity.z/2 end
+        if rot.z > handler.limits[6]-limitoffset.z then rot.z = handler.limits[6]-limitoffset.z velocity.z = -velocity.z/2 end
     end
     function events.render(delta)
         if not handler.enabled then return end
