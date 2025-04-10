@@ -9,6 +9,19 @@ local modelinstances = models:newPart("confetti"..client.intUUIDToString(client.
 local DEFAULT_LIFETIME = 20
 local math_lerp = math.lerp
 
+-- Metatable change for syncing emissive SpriteTask to the regular one
+local SpriteMap = {}
+local SpriteTask__index = figuraMetatables.SpriteTask.__index
+figuraMetatables.SpriteTask.__index = {}
+for key, value in pairs(SpriteTask__index) do
+    figuraMetatables.SpriteTask.__index[key] = function(self,...)
+        if SpriteMap[self] then
+            value(SpriteMap[self],...)
+        end
+        return value(self,...)
+    end
+end
+
 ---Default ticker
 ---@param instance Confetto
 function Confetti.defaultTicker(instance)
@@ -61,8 +74,7 @@ local DefaultConfettoOptions = {
 
 ---@class Confetto
 ---@field mesh ModelPart The model part
----@field task SpriteTask|nil The sprite task if it's a sprite particle
----@field emissiveTask SpriteTask|nil Secondary sprite task if it's emissive
+---@field task SpriteTask|nil The sprite task if it's a sprite particle. (If emissive, not a real SpriteTask but a fake one because internally it uses two actual SpriteTasks to have a normal layer and an emissive layer above it. This is so you can still just use one line of code to access both of them at the same time internally.)
 ---@field position Vector3 Current position in world coordinates
 ---@field _position Vector3 Last tick position
 ---@field velocity Vector3 The particles velocity
@@ -75,11 +87,10 @@ local DefaultConfettoOptions = {
 local Confetto = {}
 Confetto.__index = Confetto
 
-function Confetto:new(mesh, task, emissiveTask, pos, vel, bounds, pivot, options)
+function Confetto:new(mesh, task, pos, vel, bounds, pivot, options)
     return setmetatable({
         mesh=mesh,
         task=task,
-        emissiveTask=emissiveTask,
         position=pos,
         _position=pos,
         velocity=vel,
@@ -141,7 +152,7 @@ function Confetti.newParticle(name, pos, vel, options)
     if type(options.acceleration) == "number" then
         options.acceleration = vel:normalized() * options.acceleration
     end
-    local meshInstance, task, emissiveTask
+    local meshInstance, task
     if Particles[name].mesh ~= nil then
         meshInstance = modelinstances:newPart("_")
         Particles[name].mesh:copy("meshholder"):moveTo(meshInstance):setParentType(options.billboard and "CAMERA" or "NONE"):setVisible(true)
@@ -160,13 +171,13 @@ function Confetti.newParticle(name, pos, vel, options)
         end
         task = makeTask(holder:newPart("_"))
         if options.emissive then
-            emissiveTask = makeTask(holder:newPart("_")):setRenderType("EMISSIVE")
+            SpriteMap[task] = makeTask(holder:newPart("_")):setRenderType("EMISSIVE")
         end
     end
     if options.emissive then
         meshInstance:setSecondaryTexture("PRIMARY")
     end
-    local particle = Confetto:new(meshInstance, task, emissiveTask, pos, vel, Particles[name].bounds, Particles[name].pivot, options)
+    local particle = Confetto:new(meshInstance, task, pos, vel, Particles[name].bounds, Particles[name].pivot, options)
     table.insert(Instances, particle)
     return particle
 end
@@ -182,7 +193,10 @@ function events.TICK()
         end
     end
     for i, key in ipairs(deleted) do
-        table.remove(Instances, key-(i-1))
+        local removed = table.remove(Instances, key-(i-1))
+        if removed.task then
+            SpriteMap[removed.task] = nil
+        end
     end
 end
 
