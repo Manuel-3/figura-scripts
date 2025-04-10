@@ -70,6 +70,7 @@ function example3()
             scale=0.6,
             frame=0, -- custom variable "frame" added into options
             billboard=true,
+            emissive=true,
             ticker=function(particle)
                 -- we dont need the default ticker in this case, because this particle isn't supposed to move
                 -- but in general you should always always call it with confetti.defaultTicker(particle)
