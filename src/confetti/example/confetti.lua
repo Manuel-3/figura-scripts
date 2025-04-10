@@ -132,6 +132,51 @@ function Confetti.registerSprite(name, sprite, bounds, lifetime, pivot)
     Particles[name] = {sprite=sprite,bounds=bounds,lifetime=lifetime or DEFAULT_LIFETIME,pivot=pivot or vec((bounds.z-bounds.x)/2,(bounds.w-bounds.y)/2)}
 end
 
+--- Spawn a registered custom particle without checking arguments. This uses less instructions, but doesn't allow different argument types. In the options, scaleOverTime, rotationOverTime and acceleration must be Vector3 if used.
+---@param name string
+---@param pos Vector3 Position in world coordinates
+---@param vel Vector3 Velocity vector
+---@param options ConfettoOptions
+---@return Confetto
+function Confetti.newParticleUnchecked(name, pos, vel, options)
+    local ptcl = Particles[name]
+    options.lifetime = options.lifetime or ptcl.lifetime
+    setmetatable(options, { __index = DefaultConfettoOptions })
+    local meshInstance, task
+    if ptcl.mesh ~= nil then
+        meshInstance = modelinstances:newPart("_")
+        ptcl.mesh:copy("meshholder"):moveTo(meshInstance):setParentType(options.billboard and "CAMERA" or "NONE"):setVisible(true)
+    else
+        meshInstance = modelinstances:newPart("_")
+        local holder = meshInstance:newPart("taskholder")
+            :setParentType(options.billboard and "CAMERA" or "NONE")
+        local x,y,z,w = ptcl.bounds:unpack()
+        task = (holder:newPart("_")):newSprite("_")
+            :setPos(ptcl.pivot.xy_)
+            :setTexture(ptcl.sprite)
+            :setDimensions(ptcl.sprite:getDimensions())
+            :setUVPixels(x,y)
+            :setRegion(z+1-x,w+1-y)
+            :setSize(z+1-x,w+1-y)
+        if options.emissive then
+            SpriteMap[task] = (holder:newPart("_")):newSprite("_")
+                :setPos(ptcl.pivot.xy_)
+                :setTexture(ptcl.sprite)
+                :setDimensions(ptcl.sprite:getDimensions())
+                :setUVPixels(x,y)
+                :setRegion(z+1-x,w+1-y)
+                :setSize(z+1-x,w+1-y)
+                :setRenderType("EMISSIVE")
+        end
+    end
+    if options.emissive then
+        meshInstance:setSecondaryTexture("PRIMARY")
+    end
+    local particle = Confetto:new(meshInstance, task, pos, vel, ptcl.bounds, Particles[name].pivot, options)
+    Instances[client.intUUIDToString(client.generateUUID())] = particle
+    return particle
+end
+
 --- Spawn a registered custom particle
 ---@param name string
 ---@param pos Vector3 Position in world coordinates
@@ -141,8 +186,6 @@ end
 function Confetti.newParticle(name, pos, vel, options)
     vel = vel or vec(0,0,0)
     options = options or {}
-    options.lifetime = options.lifetime or Particles[name].lifetime
-    setmetatable(options, { __index = DefaultConfettoOptions })
     if type(options.scaleOverTime) == "number" then
         options.scaleOverTime = vec(options.scaleOverTime,options.scaleOverTime,options.scaleOverTime)
     end
@@ -152,56 +195,25 @@ function Confetti.newParticle(name, pos, vel, options)
     if type(options.acceleration) == "number" then
         options.acceleration = vel:normalized() * options.acceleration
     end
-    local meshInstance, task
-    if Particles[name].mesh ~= nil then
-        meshInstance = modelinstances:newPart("_")
-        Particles[name].mesh:copy("meshholder"):moveTo(meshInstance):setParentType(options.billboard and "CAMERA" or "NONE"):setVisible(true)
-    else
-        meshInstance = modelinstances:newPart("_")
-        local holder = meshInstance:newPart("taskholder")
-            :setParentType(options.billboard and "CAMERA" or "NONE")
-        local function makeTask(part)
-            return part:newSprite("_")
-                :setPos(Particles[name].pivot.xy_)
-                :setTexture(Particles[name].sprite)
-                :setDimensions(Particles[name].sprite:getDimensions())
-                :setUVPixels(Particles[name].bounds.x,Particles[name].bounds.y)
-                :setRegion(Particles[name].bounds.z+1-Particles[name].bounds.x,Particles[name].bounds.w+1-Particles[name].bounds.y)
-                :setSize(Particles[name].bounds.z+1-Particles[name].bounds.x,Particles[name].bounds.w+1-Particles[name].bounds.y)
-        end
-        task = makeTask(holder:newPart("_"))
-        if options.emissive then
-            SpriteMap[task] = makeTask(holder:newPart("_")):setRenderType("EMISSIVE")
-        end
-    end
-    if options.emissive then
-        meshInstance:setSecondaryTexture("PRIMARY")
-    end
-    local particle = Confetto:new(meshInstance, task, pos, vel, Particles[name].bounds, Particles[name].pivot, options)
-    table.insert(Instances, particle)
-    return particle
+    return Confetti.newParticleUnchecked(name, pos, vel, options)
 end
 
 function events.TICK()
-    local deleted = {}
-    for i, instance in ipairs(Instances) do
+    for key, instance in pairs(Instances) do
         instance.options.ticker(instance)
         instance.lifetime = instance.lifetime - 1
         if instance.lifetime <= 0 then
-            table.insert(deleted,i)
             modelinstances:removeChild(instance.mesh)
-        end
-    end
-    for i, key in ipairs(deleted) do
-        local removed = table.remove(Instances, key-(i-1))
-        if removed.task then
-            SpriteMap[removed.task] = nil
+            if instance.task then
+                SpriteMap[instance.task] = nil
+            end
+            Instances[key] = nil
         end
     end
 end
 
 function events.RENDER(delta, context, matrix)
-    for _, instance in ipairs(Instances) do
+    for _, instance in pairs(Instances) do
         instance.options.renderer(instance, delta, context, matrix)
     end
 end
