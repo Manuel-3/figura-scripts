@@ -84,6 +84,18 @@ function TextureLayers:setVisible(name, visibility)
     end
 end
 
+--- Get the visibility of a layer.
+---@param name string Full texture name
+---@return boolean
+function TextureLayers:getVisible(name)
+    local baseName, layerNum = string.match(name, "(.+)[Ll]ayer(%d+)")
+    if baseName and layerNum then
+        return layerTextures[baseName].layers[layerNum].visible
+    else
+        error('Malformed layer name "'..name..'"')
+    end
+end
+
 --- Set color overlay of a layer. Uses multiplicative blending, same as the ModelPart:setColor() function.
 ---@param name string Full texture name
 ---@param color Vector3|Vector4
