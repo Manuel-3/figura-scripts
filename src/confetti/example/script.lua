@@ -10,8 +10,8 @@ vanilla_model.ALL:setVisible(false)
 local confetti = require("confetti")
 
 confetti.registerMesh("spark", models.model.Spark)
-confetti.registerSprite("leaf", textures["mytexture"], vec(0,5,4,9), 30)
-confetti.registerSprite("fire", textures["mytexture"], vec(0,10,4,15))
+confetti.registerSprite("leaf", textures["model.mytexture"], vec(0,5,4,9), 30)
+confetti.registerSprite("fire", textures["model.mytexture"], vec(0,10,4,15))
 
 function example1()
     -- Example 1 bouncing sparks
