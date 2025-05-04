@@ -7,8 +7,8 @@ local SwingingPhysics = require("swinging_physics")
 ```
 You can make things swing either when they are attached to the Body or Head. Body can work for limbs too but don't account for their additional forces so it might not look as good.
 ```lua
-SwingingPhysics.swingOnHead(part, dir, limits, root, depth)
-SwingingPhysics.swingOnBody(part, dir, limits, root, depth)
+SwingingPhysics.swingOnHead(part, dir, limits, root, depth, globalLimits)
+SwingingPhysics.swingOnBody(part, dir, limits, root, depth, globalLimits)
 ```
 Check the example avatar to learn how to use it.
 
