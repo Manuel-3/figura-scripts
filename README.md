@@ -1,2 +1,2 @@
 # figura-scripts
-Collections of Scripts/Libraries/Avatars for the Figura Minecraft Mod
+A collection of scripts / libraries / assets for the Figura Minecraft mod
