@@ -1,3 +1,18 @@
+Figura Scripts – A collection of Figura libraries / scripts / assets
+
+Copyright (C) 2024-2025 Manuel-3
+Licensed under the GNU Lesser General Public License v2.1 or (at your option) any later version.
+
+Note: This repository contains multiple sub-projects, each of which may be licensed
+under different terms. In case of any conflicts, the license file specific to a
+sub-project (found within its respective subfolder) takes priority over the main
+repository license. Please refer to the relevant subfolder for specific licensing details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this library; if not, see <https://www.gnu.org/licenses/>.
+
+--- LGPL 2.1 license text starts below this line ---
+
                   GNU LESSER GENERAL PUBLIC LICENSE
                        Version 2.1, February 1999
 
