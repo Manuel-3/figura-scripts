@@ -1,6 +1,6 @@
 -- MEMBRANE by manuel_2867
 local Membrane = {}
---- Define a cube as a membrane attached to the 4 groups in the positions table.
+--- Define a cube or plane mesh as a membrane attached to the 4 groups in the positions table.
 ---@param membrane ModelPart
 ---@param positions ModelPart[]
 function Membrane:define(membrane,positions)
@@ -10,7 +10,7 @@ function Membrane:define(membrane,positions)
     for i=1,4 do
         assert(positions[i],"The group at position "..i.." doesn't exist.")
     end
-    membrane:setPrimaryRenderType("TRANSLUCENT_CULL")
+    membrane:setPrimaryRenderType(membrane:getType() == "MESH" and "TRANSLUCENT" or "TRANSLUCENT_CULL")
     local vs = {}
     for _, t in pairs(membrane:getAllVertices()) do
         for _, v in ipairs(t) do
@@ -29,8 +29,10 @@ function Membrane:define(membrane,positions)
             local pos = worldToPartMat:apply(p:partToWorldMatrix():apply())
             vs[i]:setPos(pos)
             vs[i]:setNormal(normal)
-            vs[#vs+1-i]:setPos(pos)
-            vs[#vs+1-i]:setNormal(normal*-1)
+            if #vs > 4 then
+                vs[#vs+1-i]:setPos(pos)
+                vs[#vs+1-i]:setNormal(normal*-1)
+            end
         end
     end)
 end
