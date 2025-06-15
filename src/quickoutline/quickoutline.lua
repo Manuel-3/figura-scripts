@@ -45,7 +45,7 @@ local function createOutline(cube, thickness, color, emissive)
         outline:setPivot(centerPivot(outline))
         table.insert(outlines, outline)
     end
-    return outlines
+    return outline
 end
 
 return {createOutline = createOutline}
