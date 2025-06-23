@@ -1,0 +1,17 @@
+# Clean up
+[r] Refactor GNUI's require to be modular
+[x] Merge multiple classes as much as possible.
+# Rendering
+[x] Rewrite text rendering to be more abstract
+ - text rendering is awful as of now
+[ ] Rewrite Debug mode to be its own library, somehow
+
+# Goal Love2D Compatibility Layer
+-- the following todo things are still connected to the base API of Figura. the goal is to add a wrapper in between to allow easy swap of whos using GNUI.
+[ ] Input Wrapper
+ - Relies on Events Wrapper, complete events wrapper first.
+[ ] Create a Renderer Wrapper.
+-- a wrapper inbetween the ninepatch library and GNUI is needed to make it swappable.
+[ ] Make every events in GNUI rely on the Events Wrapper.
+ - Input and Renderer relies on this.
+ - Existing Wrapper exists, the goal is apply it to every event in GNUI.

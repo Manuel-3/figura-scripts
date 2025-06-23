@@ -1,0 +1,2 @@
+__FONT_HEADING = 0.75
+__FONT_TEXT = 0.5
