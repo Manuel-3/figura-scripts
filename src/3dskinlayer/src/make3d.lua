@@ -32,9 +32,9 @@ local body_scale = 1
 local arm_scale = 1
 local leg_scale = 1
 
-local use_vanilla_skin = false -- set to true if you want to use your vanilla skin. doesnt work with low complexity mode so it is recommended to replace the included texture with your skin instead
+local use_vanilla_skin = true -- set to true if you want to use your vanilla skin. doesnt work with low complexity mode so it is recommended to replace the included texture with your skin instead
 local skin_resolution = 16 -- 16 for normal, 32 for a double resolution skin, etc... up to 256x (will increase complexity significantly)
-local low_complexity_mode = true -- set to false if you need to be able to animate or change textures on the fly (will increase complexity significantly)
+local low_complexity_mode = false -- set to false if you need to be able to animate or change textures on the fly (will increase complexity significantly)
 
 -- keep registeredTextures empty to only use the primary texture,
 -- or fill with texture names if you want to pre-load 3d layers for different textures that you want to swap to later.
@@ -254,7 +254,11 @@ function events.ENTITY_INIT()
         registerTexture(texture)
     end
     
-    registerTexture("PRIMARY") -- default
+    if use_vanilla_skin then
+        registerTexture("SKIN")
+    else
+        registerTexture("PRIMARY")
+    end
     
     if use_vanilla_skin then
         models.player_model3d:setPrimaryTexture("SKIN")
