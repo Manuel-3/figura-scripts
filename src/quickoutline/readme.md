@@ -8,7 +8,7 @@ Example Usage:
 ```lua
 local outline = require("quickoutline")
 
-local head_outline = outline.createOutline(models.model.Head.cube, 0.2, vec(0,0,0), false)
+local head_outlines_array = outline.createOutline(models.model.Head.cube, 0.2, vec(0,0,0), false)
 --                                         ^cube/group    thickness^    ^color      ^emissive
 ```
 If you select a group it will make outlines for all cubes within it.
