@@ -3,7 +3,7 @@ local enabled = true
 --------------------
 if not enabled then return end
 size = math.max(1,math.floor(size))
-local objects = require "./tinyphysics"
+local objects = require "./tinyphysics_core"
 local white = textures:newTexture("whitepixel",1,1):setPixel(0,0,vec(1,1,1))
 local red = textures:newTexture("redpixel",1,1):setPixel(0,0,vec(1,0,0))
 local green = textures:newTexture("greenpixel",1,1):setPixel(0,0,vec(0,1,0))

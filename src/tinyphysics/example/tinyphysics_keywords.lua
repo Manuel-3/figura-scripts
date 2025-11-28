@@ -1,8 +1,8 @@
--- todo
--- make the x and z rotation locks actually work, currently only setting object.x and object.z to true or false
-
-local objects = {}
-
+-- local axisAdjustment = 0
+local enabled = true
+------------------------
+if not enabled then return end
+local objects = require "./tinyphysics_core"
 local function extract(s)
     if s:match("^tinyphys") then
         local values = {
@@ -10,7 +10,8 @@ local function extract(s)
             z=true,
             l=16,
             g=1,
-            a=1,
+            d=1,
+            a=0
         }
         local data = s:match("^tinyphys(.*)")
         if data then
@@ -30,7 +31,6 @@ local function extract(s)
         return values
     end
 end
-
 ---@param bone ModelPart
 local function walk(bone,parent)
     local name = bone:getName():lower()
@@ -39,8 +39,8 @@ local function walk(bone,parent)
         local helper1 = bone:newPart(bone:getName().."Helper1"):moveTo(parent)
         local helper2 = bone:newPart(bone:getName().."Helper2"):moveTo(helper1)
         bone:moveTo(helper2)
-        helper1:setRot(0,-90,0)
-        bone:setRot(0,90,0)
+        helper1:setRot(-180,-values.a,-180)
+        bone:setRot(180,values.a,180)
         objects[#objects+1] = {
             part=helper2,
             helper=helper1,
@@ -48,41 +48,17 @@ local function walk(bone,parent)
             pos=vec(0,0,0),
             _pos=vec(0,0,0),
             length=values.l/16*math.playerScale,
-            gravity=vec(0,-0.08*values.g,0),
-            airResistance = 0.06*values.a,
+            parent=parent,
+            gravity=parent:partToWorldMatrix():invert():applyDir(bone:partToWorldMatrix():applyDir(0,-1,0):normalized()*0.08*values.g),
+            drag = 0.06*values.d,
             x=values.x,
             z=values.z,
         }
-        -- logTable(objects[#objects])
     end
     for _, child in ipairs(bone:getChildren()) do
         walk(child,bone)
     end
 end
-walk(models)
-
-function events.tick()
-    for _, object in ipairs(objects) do
-        local mat = object.helper:partToWorldMatrix()
-        local start = mat:apply()
-        local pos = object.pos
-        local airResistance = object.airResistance
-        local newpos = pos + ((pos - object._pos) + object.gravity - (start - object.start) * airResistance) * (1 - airResistance)
-        object.start = start
-        object._pos = pos
-        object.pos = start + (newpos - start):normalized() * object.length
-    end
+function events.entity_init()
+    walk(models)
 end
-
-local lerp = math.lerp
-local atan2 = math.atan2
-function events.post_render(delta)
-    for _, object in ipairs(objects) do
-        local pos = lerp(object._pos,object.pos,delta)
-        local dir = object.helper:partToWorldMatrix():invert():apply(pos)
-        local rot = vec(-atan2(dir.z, dir.xy:length()), 0, atan2(dir.y, dir.x) + 1.57)*57.29577
-        object.part:setRot(rot)
-    end
-end
-
-return objects
