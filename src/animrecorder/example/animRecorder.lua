@@ -3,8 +3,18 @@ local SCRIPT_NAME = ({...})[#{...}]..".lua"
 
 local lib = {}
 
+---@class Transform
+---@field pos Vector3
+---@field rot Vector3
+---@field scale Vector3
+local Transform = {}
+
+---@alias RecordedFrame table<string, Transform>
+
 ---@class AnimationRecording
+---@field [number] RecordedFrame
 ---@field name string
+---@field blend number|nil Between 0 and 1 just like regular animation blend
 local AnimationRecording = {}
 
 --- Deep copy model parts.
@@ -55,36 +65,53 @@ function lib.record(animation, modelpart, callback)
     events.tick:register(tick)
 end
 
+--- Delete all position, rotation, and scale values of a model part group and all child groups.
+---@param part ModelPart
+function lib.clear(part)
+    if part:getType()~="GROUP" then return end
+    part:setPos(0,0,0)
+    part:setOffsetRot(0,0,0)
+    part:setOffsetScale(1,1,1)
+    for _, child in ipairs(part:getChildren()) do
+        lib.clear(child)
+    end
+end
+
+--- Helper function to apply all the animation values of a recorded frame to a model part and its children groups
+---@param part ModelPart
+---@param frame RecordedFrame
+---@param nextFrame RecordedFrame
+---@param delta number Render delta
+---@param blend number|table<string, number>|nil Blend amount between 0 and 1 or a table mapping group names to individual blend amounts
+---@param name string|nil Animation name only used for warning message
+function lib.applyFrame(part, frame, nextFrame, delta, blend, name)
+    blend = blend or 1
+    name = name or "Unnamed"
+    if part:getType()~="GROUP" then return end
+    local idx = part:getName()
+    if frame[idx] then
+        local blendAmount = blend
+        if type(blend) == "table" then
+            blendAmount = blend[idx] or 1
+        end
+        part:setPos(blendAmount*math.lerp(frame[idx].pos,nextFrame[idx].pos,delta))
+        part:setOffsetRot(blendAmount*math.lerp(frame[idx].rot,nextFrame[idx].rot,delta))
+        part:setOffsetScale(blendAmount*math.lerp(frame[idx].scale,nextFrame[idx].scale,delta):add(-1,-1,-1)+vec(1,1,1))
+    elseif ENABLE_WARNINGS then
+        logJson(toJson{color='yellow',text='Warning: The animation recording of "'..name..'" does not have a "'..idx..'" group in it. Did you apply it to the wrong group or did you forget to remap a group name? To disable warnings set ENABLE_WARNINGS to false at the top of '..SCRIPT_NAME..'.\n'})
+        ENABLE_WARNINGS = false
+    end
+    for _, child in ipairs(part:getChildren()) do
+        lib.applyFrame(child, frame, nextFrame, delta, blend, name)
+    end
+end
+
 --- Play a recorded animation on a model part
 ---@param recording AnimationRecording
 ---@param modelpart ModelPart
 ---@param mode Animation.loopMode|nil Default is "LOOP"
 function lib.play(recording, modelpart, mode)
     mode = mode or "LOOP"
-    local function apply(currentPart, frame, nextFrame, delta)
-        if currentPart:getType()~="GROUP" then return end
-        local idx = currentPart:getName()
-        if frame[idx] then
-            currentPart:setPos(math.lerp(frame[idx].pos,nextFrame[idx].pos,delta))
-            currentPart:setOffsetRot(math.lerp(frame[idx].rot,nextFrame[idx].rot,delta))
-            currentPart:setOffsetScale(math.lerp(frame[idx].scale,nextFrame[idx].scale,delta))
-        elseif ENABLE_WARNINGS then
-            logJson(toJson{color='yellow',text='Warning: The animation recording of "'..recording.name..'" does not have a "'..idx..'" group in it. Did you apply it to the wrong group or did you forget to remap a group name? To disable warnings set ENABLE_WARNINGS to false at the top of '..SCRIPT_NAME..'.\n'})
-            ENABLE_WARNINGS = false
-        end
-        for _, child in ipairs(currentPart:getChildren()) do
-            apply(child, frame, nextFrame, delta)
-        end
-    end
-    local function clear(currentPart)
-        if currentPart:getType()~="GROUP" then return end
-        currentPart:setPos(0,0,0)
-        currentPart:setOffsetRot(0,0,0)
-        currentPart:setOffsetScale(1,1,1)
-        for _, child in ipairs(currentPart:getChildren()) do
-            clear(child)
-        end
-    end
     local t = 1
     local function render(delta)
         if client:isPaused() then return end
@@ -93,13 +120,13 @@ function lib.play(recording, modelpart, mode)
                 events.render:remove(render)
                 delta = 0
                 if mode == "ONCE" then
-                    clear(modelpart)
+                    lib.clear(modelpart)
                     return
                 end
             end
         end
         local nextt = t % #recording + 1
-        apply(modelpart, recording[t], recording[nextt], delta)
+        lib.applyFrame(modelpart, recording[t], recording[nextt], delta, recording.blend, recording.name)
     end
     local function tick()
         if client:isPaused() then return end
@@ -142,7 +169,7 @@ end
 --- Remap group names in the animation recording.
 --- Does not mutate the input. Returns remapped recording.
 ---@param recording AnimationRecording
----@param remappings table
+---@param remappings table<string, string>
 ---@return AnimationRecording
 function lib.remap(recording,remappings)
     local remapped = {name=recording.name}
