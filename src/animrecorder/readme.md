@@ -14,6 +14,14 @@ local copy = recorder.deepCopy(models.model):moveTo(models):setPos(10,0,0)
 recorder.record(animations.model.animation, models.model.group, function(recording)
     recorder.play(recording, copy.group, "LOOP")
 
-    recorder.bake(recording) -- copies to clipboard
+    recorder.bake(recording) -- copies baked animation as lua code to clipboard
+
+    -- if you animate not an exact copy you have the option to remap group names
+    local remapped = recorder.remap(recording, {
+        oldName="newName",
+        anotherOldName="anotherNewName",
+        -- ...
+    })
+    recorder.play(remapped, models.somemodel, "LOOP")
 end)
 ```
