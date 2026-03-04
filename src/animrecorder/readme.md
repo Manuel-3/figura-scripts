@@ -13,9 +13,15 @@ local copy = recorder.deepCopy(models.model):moveTo(models):setPos(10,0,0)
 
 recorder.record(animations.model.animation, models.model.group, function(recording)
     recorder.play(recording, copy.group, "LOOP")
-    recording.blend = 0.5 -- similar to animation blend but you can also put a table mapping group names to blend amounts
 
-    recorder.bake(recording) -- copies baked animation as lua code to clipboard
+    -- similar to animation blend but you can also
+    -- put a table mapping group names to blend amounts
+    recording.blend = 0.5 
+    --
+    recording.blend = {group = 1,group2 = 0.5}
+
+    -- copies baked animation as lua code to clipboard
+    recorder.bake(recording)
 
     -- if you animate not an exact copy you have the option to remap group names
     local remapped = recorder.remap(recording, {
