@@ -40,6 +40,7 @@ function lib.record(animation, modelpart, callback)
             return
         else
             recording[t] = {}
+            host:setActionbar('Recording "'..animation:getName()..'" '..t..'/'..math.floor(animation:getLength()*20))
             capture(modelpart, recording[t])
         end
         t = t + 1
@@ -96,6 +97,28 @@ function lib.play(recording, modelpart, mode)
     end
     events.tick:register(tick)
     events.render:register(render)
+end
+
+function lib.bake(recording)
+    local function serialize(o)
+        if type(o) == "table" then
+            local str = '{'
+            for key, value in pairs(o) do
+                str = str .. key .. '=' .. serialize(value)
+            end
+            str = str .. '},'
+            return str
+        elseif type(o) == "Vector3" then
+            return 'vec(' .. o.x .. ',' .. o.y .. ',' .. o.z .. '),'
+        end
+    end
+    local str = "local recording = {"
+    for _, value in ipairs(recording) do
+        str = str .. serialize(value)
+    end
+    str = str .. "}"
+    host:setClipboard(str)
+    host:setActionbar("Copied recording to clipboard. You can now paste it into your script.")
 end
 
 return lib
