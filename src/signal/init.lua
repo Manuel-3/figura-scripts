@@ -124,7 +124,7 @@ function Signal.new()
 			if (not firstEntry) then
 				table.remove(self.batches_to_fire, 1)
 			else
-				firstEntry(unpack(currentBatch.params))
+				firstEntry(table.unpack(currentBatch.params))
 				table.remove(currentBatch.batches, 1)
 			end
 		end
