@@ -6,17 +6,20 @@ Schedules a function to run after a specified amount of ticks or when a predicat
 
 Download the `runLater.lua` file and put it next to your other files in your avatar.
 
-Then use the example code below in *a different script* (dont edit the downloaded file).
+Then require it inside *your own script file* (do not edit the downloaded `runLater.lua` file):
+
+```lua
+local runLater = require("runLater")
+```
 
 The most simple usage is to just run a function after a number of ticks:
 
 ```lua
-local runLater = require("runLater")
 
 log("This is right now!")
 
 runLater(20, function()
-    log("This is 1 second (20 ticks) later!")
+    print("This is 1 second (20 ticks) later!")
 end)
 ```
 
@@ -28,6 +31,29 @@ runLater(
     function() return not anim1:isPlaying() end, -- wait for this to return true
     function() anim2:play() end -- play second animation afterwards
 )
+```
+
+The predicate gets the currently waited time as the only parameter, so you can also use it to run a function for a specific amount of time.
+
+```lua
+runLater(
+    function(t)
+        print("This will print for 10 ticks. " .. t)
+        return t == 10
+    end,
+    function()
+        print("Done.")
+    end
+)
+```
+
+The second function is optional if you do not need to run anything after the time is up.
+
+```lua
+runLater(function(t)
+    print("This will print for 10 ticks. " .. t)
+    return t == 10
+end)
 ```
 
 Finally, there is also a runLaterMs.lua, which takes milliseconds instead of ticks as the input. DISCLAIMER: Uses WORLD_RENDER so whatever you do it will most likely ERROR on the default permission setting as the limit is very low! Ideally use the regular tick based runLater instead of this! This function also isn't perfectly accurate, as it depends on the framerate, therefore in the callback the amount of overshot milliseconds is passed in.
