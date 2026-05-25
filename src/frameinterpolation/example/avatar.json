@@ -1,6 +1,6 @@
 {
-    "name": "Frame Interpolation Example",
-    "description": "",
+    "name": "Frame Interpolation",
+    "description": "Generate in between frames of custom textures, works like the vanilla prismarine texture.",
     "authors": [
         "manuel_2867"
     ],

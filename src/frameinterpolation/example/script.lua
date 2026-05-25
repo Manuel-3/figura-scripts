@@ -1,15 +1,18 @@
 local frameinterpolation = require("frameinterpolation")
 
-local tex1 = frameinterpolation.generate(textures["prismarine"],"vertical",4)
-models.model.cube2:setPrimaryTexture("CUSTOM",tex1)
+-- Example 1: Using the vanilla prismarine texture
+-- Generating 20 interpolated frames for each existing frame.
+-- Because it could be a different amount of frames than normal if someone is using a resource pack,
+-- we use frame count of "unknown". Make sure in that the UV of your model is set to the entire texture for that to work.
+local texture = textures:fromVanilla("prismarine", "minecraft:textures/block/prismarine.png")
+frameinterpolation.interpolate(texture, "unknown", 20, function(atlas)
+    frameinterpolation.animate({models.model.cube1}, atlas)
+end)
 
-logTable(textures:getTextures())
-
-speed = 2
-scale = 16
-
-function events.tick()
-    local time = world.getTime()
-    models.model.cube1:setUV(0, math.floor(time/(speed*scale))/4)
-    models.model.cube2:setUV(0, math.floor(time/speed)/(4*scale))
-end
+-- Example 2: Using custom vertical texture strip
+-- Generating 10 interpolated frames for each existing frame.
+-- This time you can either put the amount of frames your texture has, or "auto" to determine it from the width.
+-- In this case, make sure the UV is set to the first frame (top left corner) of your texture.
+frameinterpolation.interpolate(textures["model.texture1-sheet"], "auto", 10, function(atlas)
+    frameinterpolation.animate({models.model.cube2}, atlas)
+end)
