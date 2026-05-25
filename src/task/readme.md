@@ -1,23 +1,11 @@
-# Task
-
-Add a new Task to the stack. Tasks are basically async for loops.
-
-The process function should handle a small chunk of the overall work you need to do.
-
-You can nest Tasks by making new ones inside of the process function.
-
-Execution of tasks is done as fast as possible using both tick and render events.
-
-System tries to use the remaining available instructions, cutoff before limit is reached can be changed at the top of the `task.lua` file.
-
-These events are registered in entity_init to run after all other registered events, because the system uses up all the remaining instructions (up to the cutoff).
+# Task — Process chunking and instruction limit optimization using async for loops
 
 To use, first:
 ```lua
 local Task = require("task.lua")
 ```
 
-Example
+Example `Task(start,finish,process,callback)`
 ```lua
 Task(1,5,function(i)
     --code
@@ -33,6 +21,18 @@ for i = 1, 5 do
 end
 --done
 ```
+
+Tasks are basically async for loops.
+
+The process function should handle a small chunk of the overall work you need to do.
+
+You can nest Tasks by making new ones inside of the process function.
+
+Execution of tasks is done as fast as possible using both tick and render events.
+
+System tries to use the remaining available instructions, cutoff before limit is reached can be changed at the top of the `task.lua` file.
+
+These events are registered in entity_init to run after all other registered events, because the system uses up all the remaining instructions (up to the cutoff).
 
 Example Progress Bar, target amount matches the loops done
 ```lua
