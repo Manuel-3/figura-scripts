@@ -1,6 +1,6 @@
 # Frame Interpolation
 
-Generate interpolated frames for an animated texture stip. Some vanilla textures such as prismarine do this. Makes an animation that smoothly transitions between the frames of the original texture.
+Generate interpolated frames for an animated texture strip. Some vanilla textures such as prismarine do this. Makes an animation that smoothly transitions between the frames of the original texture.
 
 Works even on Low permission level.
 
