@@ -1,4 +1,6 @@
--- Texture Layers By manuel_2867
+-- Texture Layers by manuel_2867
+
+local Task = require("./task")
 
 local TextureLayers = {}
 
@@ -121,23 +123,34 @@ function TextureLayers:update(name)
     local baseTexture = textures[baseName]
     local dims = baseTexture:getDimensions()
     baseTexture:restore()
-    for _, key in ipairs(keys) do
+    Task(1,#keys,function(i)
+        local progress = Task.ProgressBar("Processing "..name.." "..i.."/"..#keys,dims.x)
+        local key = keys[i]
         if layerTextures[baseName].layers[key].visible then
             local layer = layerTextures[baseName].layers[key].texture
             local colMul = layerTextures[baseName].layers[key].color
-            baseTexture:applyFunc(0,0,dims.x,dims.y,function(col,x,y)
-                return blend(layer:getPixel(x,y)*colMul,col)
+            Task(0,dims.x-1,function(x)
+                progress()
+                Task(0,dims.y-1,function(y)
+                    baseTexture:setPixel(x,y,blend(layer:getPixel(x,y)*colMul,baseTexture:getPixel(x,y)))
+                end)
             end)
         end
-    end
-    baseTexture:update()
+    end,
+    function()
+        baseTexture:update()
+    end)
 end
 
 --- Draw texture layers onto all base textures.
 function TextureLayers:updateAll()
+    local names = {}
     for name in pairs(layerTextures) do
-        self:update(name)
+        table.insert(names, name)
     end
+    Task(1,#names,function(i)
+        self:update(names[i])
+    end)
 end
 
 function events.ENTITY_INIT()
