@@ -66,36 +66,34 @@ function Atlas:get(frameNum)
     return loc.texture, loc.x, loc.y
 end
 
-function Atlas:put(frameNum,texture,x,y)
-    local loc = self.locations[frameNum]
-    local locX = loc.x
-    local locY = loc.y
-    local getPixel = texture.getPixel
-    Task(0,self.frameHeight-1,function(j)
-        loc.texture:applyFunc(locX,locY+j,self.frameWidth,1,function(_, x1, y1)
-            return getPixel(texture,x+x1-locX,y+y1-locY)
-        end)
-    end)
-end
+-- function Atlas:put(frameNum,texture,x,y)
+--     local loc = self.locations[frameNum]
+--     local locX = loc.x
+--     local locY = loc.y
+--     local getPixel = texture.getPixel
+--     Task(0,self.frameWidth-1,function(i)
+--         Task(0,self.frameHeight-1,function(j)
+--             loc.texture:setPixel(locX+i,locY+j,getPixel(texture,x+i,y+j))
+--         end)
+--     end)
+-- end
 
 function Atlas:putBlend(frameNum,texture,x1,y1,x2,y2,fraction)
     local loc = self.locations[frameNum]
     local locX = loc.x
     local locY = loc.y
     local getPixel = texture.getPixel
-    Task(0,self.frameHeight-1,function(j)
-        loc.texture:applyFunc(locX,locY+j,self.frameWidth,1,function(_, x, y)
-            x = x-locX
-            y = y-locY
-            return lerp(getPixel(texture,x1+x,y1+y),getPixel(texture,x2+x,y2+y),fraction)
+    Task(0,self.frameWidth-1,function(i)
+        Task(0,self.frameHeight-1,function(j)
+            loc.texture:setPixel(locX+i,locY+j,lerp(getPixel(texture,x1+i,y1+j),getPixel(texture,x2+i,y2+j),fraction))
         end)
     end)
 end
 
 function Atlas:update()
-    for _, location in ipairs(self.locations) do
-        location.texture:update()
-    end
+    Task(1,#self.locations,function(i)
+        self.locations[i].texture:update()
+    end)
 end
 
 return Atlas
