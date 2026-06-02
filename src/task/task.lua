@@ -1,6 +1,7 @@
 -- Task by manuel_2867
 
 local INSTRUCTION_CUTOFF_PERCENT = 0.7
+local DISABLE_PROGRESS_BARS = false
 
 local stack = {}
 
@@ -40,7 +41,7 @@ end
 ---@param length number? How many characters the progress bar is, defaults to 15 characters.
 ---@return fun(amount: number?) Returns the progress function, call it to increase the progress. When all your processing is done the total progress should equal `target`.
 local function ProgressBar(name, target, length)
-    if not host:isHost() then return function()end end
+    if DISABLE_PROGRESS_BARS or not host:isHost() then return function()end end
     length = length or 15
     local val = 0
     local function progress(i)
