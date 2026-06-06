@@ -44,7 +44,7 @@ local mat3 = matrices.mat3()
 ---@param frame number The frame number to apply (starts at 1)
 function frameinterpolation.applyFrame(parts, atlas, frame)
     frame = (frame - 1) % atlas.frameCount + 1
-    local texture, x, y = atlas:get(f)
+    local texture, x, y = atlas:get(frame)
     mat3:reset()
         :translate(x/atlas.width/atlas.horizontalScale,y/atlas.height/atlas.verticalScale)
         :scale(atlas.horizontalScale,atlas.verticalScale)
