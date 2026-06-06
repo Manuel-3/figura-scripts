@@ -38,6 +38,22 @@ end
 
 local mat3 = matrices.mat3()
 
+---Apply a certain frame to a list of parts
+---@param parts ModelPart[] List of model parts to animate
+---@param atlas Atlas Atlas to animate
+---@param frame number The frame number to apply (starts at 1)
+function frameinterpolation.applyFrame(parts, atlas, frame)
+    frame = (frame - 1) % atlas.frameCount + 1
+    local texture, x, y = atlas:get(f)
+    mat3:reset()
+        :translate(x/atlas.width/atlas.horizontalScale,y/atlas.height/atlas.verticalScale)
+        :scale(atlas.horizontalScale,atlas.verticalScale)
+    for _, part in ipairs(parts) do
+        part:setPrimaryTexture("CUSTOM", texture)
+        part:setUVMatrix(mat3)
+    end
+end
+
 ---Animation helper for the resulting interpolated frames
 ---@param parts ModelPart[] List of model parts to animate
 ---@param atlas Atlas Atlas to animate
@@ -50,15 +66,8 @@ function frameinterpolation.animate(parts, atlas, ticksPerFrame)
     local function tick()
         n = n + 1
         if n % ticksPerFrame ~= 0 then return end
-        f = f % atlas.frameCount + 1
-        local texture, x, y = atlas:get(f)
-        mat3:reset()
-            :translate(x/atlas.width/atlas.horizontalScale,y/atlas.height/atlas.verticalScale)
-            :scale(atlas.horizontalScale,atlas.verticalScale)
-        for _, part in ipairs(parts) do
-            part:setPrimaryTexture("CUSTOM", texture)
-            part:setUVMatrix(mat3)
-        end
+        f = f + 1
+        frameinterpolation.applyFrame(parts, atlas, f)
     end
     events.tick:register(tick)
     return tick
