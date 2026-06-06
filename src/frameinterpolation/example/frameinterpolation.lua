@@ -5,7 +5,7 @@ local Task = require("./task")
 
 local frameinterpolation = {}
 
----Takes a list of textures, generates interpolated inbetweens and returns a list of all interpolated frames
+---Takes a vertical texture strip, generates interpolated inbetweens and calls the callback function with the interpolated atlas data
 ---@param texture Texture A vertical texture animation strip
 ---@param frameCount number|string How many frames the texture currently has, or "auto" to determine it using the width, or "unknown" if it could be different amounts such as for vanilla resource texture that could have been changed using a resource pack. In the case of putting a number or putting "auto", the UV of your model in blockbench must be set to the first frame of the texture. In the case of "unknown", the UV must be set to the full entire texture.
 ---@param interpolationCount number How many new frames to add for each of the current frames
