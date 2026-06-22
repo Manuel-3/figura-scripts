@@ -9,7 +9,7 @@ local function step(max)
     repeat
         local current = stack[#stack]
         if not stack[#stack] then return end
-        if current.i > current.finish then
+        if current.finish and current.i > current.finish or current.condition and not current.condition() then
             table.remove(stack,#stack)
             if current.callback then
                 current.callback()
@@ -86,9 +86,16 @@ end
 ---@param start number Lower bound of loop (inclusive).
 ---@param finish number Upper bound of loop (inclusive).
 ---@param process fun(i: number) Loop body, gets i variable like a regular for loop.
----@param callback function When the task is done, calls this function.
-local function Task(_, start,finish,process,callback)
+---@param callback? function When the task is done, calls this function.
+local function For(_, start,finish,process,callback)
     table.insert(stack,{process=process,callback=callback,i=start,finish=finish})
 end
 
-return setmetatable({ProgressBar=ProgressBar},{__call=Task})
+---@param condition fun():boolean The while condition
+---@param process fun(i: number) Loop body, gets i variable like a regular for loop.
+---@param callback? function When the task is done, calls this function.
+local function While(condition,process,callback)
+    table.insert(stack,{process=process,callback=callback,i=1,condition=condition})
+end
+
+return setmetatable({ProgressBar=ProgressBar,While=While,For=For},{__call=For})
