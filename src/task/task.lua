@@ -15,7 +15,7 @@ local function check_event(event)
         event = string.upper(event)
         if event == "TICK" or event == "RENDER" then
             ENABLE_EVENT_WARNINGS = false
-            logJson(toJson{{text='Warning! ',color='yellow'},{text=filename..'.lua was not the last script to register a '..event..' event! For task.lua to function properly, it must have the last TICK and RENDER events, otherwise you are risking "overran resource limits" errors. Make sure your TICK and RENDER events are registered before the ENTITY_INIT event has run. You can get rid of this warning by going into task.lua and removing the event log section which is marked with comments.\n',color='white'}})
+            logJson(toJson{{text='Warning! ',color='yellow'},{text=filename..'.lua was not the last script to register a '..event..' event! For task.lua to function properly, it must have the last TICK and RENDER events, otherwise you are risking "overran resource limits" errors. Make sure your TICK and RENDER events are registered before the ENTITY_INIT event has run to remove this warning. If you know what youre doing, you can also get rid of this warning by going into task.lua and removing the event log section which is marked with comments.\n',color='white'}})
         end
     end
 end

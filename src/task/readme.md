@@ -8,16 +8,16 @@ local Task = require("task.lua")
 Example `Task(start,finish,process,callback)`
 ```lua
 Task(1,5,function(i)
-    --code
+  --code
 end,
 function()
-    --done
+  --done
 end)
 ```
 basically equivalent to
 ```lua
 for i = 1, 5 do
-    --code
+  --code
 end
 --done
 ```
@@ -26,52 +26,57 @@ Tasks are basically async for loops.
 
 The process function should handle a small chunk of the overall work you need to do.
 
-You can nest Tasks by making new ones inside of the process function.
+Execution of tasks is done as fast as possible using both tick and render events, using the remaining available instructions until cutoff limit is reached, which can be changed at the top of the `task.lua` file.
 
-Execution of tasks is done as fast as possible using both tick and render events.
-
-System tries to use the remaining available instructions, cutoff before limit is reached can be changed at the top of the `task.lua` file.
-
-These events are registered in entity_init to run after all other registered events, because the system uses up all the remaining instructions (up to the cutoff).
-
-Example Progress Bar, target amount matches the loops done
+Example: Nesting tasks to iterate a texture and also show a progress bar
 ```lua
-local progress = Task.ProgressBar("My Task", 5)
+local progress = Task.ProgressBar("Editing texture", width * height)
 
-Task(1,5,function(i)
-    --code
+Task(0,width-1,function(x)
+  Task(0,height-1,function(y)
+    texture:setPixel(x,y,vec(1,1,1))
     progress()
+  end)
+end,
+function()
+  texture:update()
 end)
 ```
-
-Example nested
-```lua
-local progress = Task.ProgressBar("My Task", 5*20)
-
-Task(1,5,function(i)
-    Task(1,20,function(j)
-        --code
-        progress()
-    end)
-end)
-```
-
-Example of useful pattern with Tasks, allowing async processing by using callbacks
+Useful pattern with Tasks, adding a callback function parameter to your function to make it async:
 ```lua
 function factorial(x, callback)
-    local result = 1
-    Task(1,x,function(i)
-        --example
-        result = result * i
-    end,
-    function()
-        callback(result)
-    end)
+  local result = 1
+  Task(1,x,function(i)
+    --example
+    result = result * i
+  end,
+  function()
+    callback(result)
+  end)
 end
 
 factorial(5, function(result)
-    print(result)
+  print(result)
 end)
 ```
 
-As an example how it is used in a real project see [frameinterpolation](https://github.com/Manuel-3/figura-scripts/tree/main/src/frameinterpolation).
+Example while loop `while x < 10 do`:
+```lua
+local x = 0
+Task.While(function()return x < 10 end,function()
+  x = x + 1
+end)
+```
+
+One bonus thing you might find useful, normal render event can run multiple times per frame if multiple contexts are happening at the same time, for example doubling your render instructions when opening the inventory etc... Here is render that runs only once per world render:
+```lua
+Task.SingleRender(function(delta, ctx, matrix)
+  -- whatever render event code
+end)
+```
+
+Real world examples can be seen in the following of my other projects:
+
+- [watersim](https://github.com/Manuel-3/figura-scripts/tree/main/src/watersim)
+- [texturelayers](https://github.com/Manuel-3/figura-scripts/tree/main/src/texturelayers)
+- [frameinterpolation](https://github.com/Manuel-3/figura-scripts/tree/main/src/frameinterpolation).
