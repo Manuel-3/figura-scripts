@@ -112,7 +112,7 @@ events.ENTITY_INIT:register(function ()
 end)
 function events.tick()
   frame = (frame + TEXTURE_ANIMATION_SPEED) % framecount
-  mat:reset():scale(1, 1 / framecount):translate(0, math.floor(frame) / framecount)
+  mat:reset():scale(WATER_SCALE, (1 / framecount)*WATER_SCALE):translate(0, (math.floor(frame) / framecount)/WATER_SCALE)
   water:setUVMatrix(mat)
   watercolor = math.lerp(watercolor,world.getBiome(player:getPos()):getWaterColor(),0.035)
   water:setColor(watercolor)
