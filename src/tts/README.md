@@ -47,4 +47,4 @@ At the top of the `tts.lua` file you can change:
 
 - The ping rate limits
 
-Lower means more stable, but also slower streaming. Higher ping rate limit means sending the audio more quickly, but risks being canceled by the figura cloud. **If you get a single "too many pings" or "ping too large" error, the audio will not be heard in mulyiplayer!**
+Lower means more stable, but also slower streaming. Higher ping rate limit means sending the audio more quickly, but risks being canceled by the figura cloud. **If you get a single "too many pings" or "ping too large" error, the audio will not be heard in multiplayer!**
