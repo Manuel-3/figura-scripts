@@ -19,7 +19,7 @@ Open a terminal in this directory. If you have vscode, you can simply press `Ctr
 
 Run these two commands in the terminal: First `conda init` and then `conda create --file environment.yml`
 
-Start Minecraft and join a world, open the Figura menu. Go to the settings tab and type "network" into the search bar. Enable "Allow Networking". Set "Networking Restriction" to "Whitelist". Click on "Network Filter" and then "Add Filter Entry", add localhost as a filter. Press escape to exist this menu.
+Start Minecraft and join a world, open the Figura menu. Go to the settings tab and type "network" into the search bar. Enable "Allow Networking". Set "Networking Restriction" to "Whitelist". Click on "Network Filter" and then "Add Filter Entry", add `localhost` as a filter. Press escape to exit this menu.
 
 In the same Figura settings search bar, type "chat". Set "Chat Messages" to "On".
 
